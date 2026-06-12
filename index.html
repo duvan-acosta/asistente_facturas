@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1321" />
+    <meta name="description" content="Control de cuentas por pagar — hogar y empresa" />
+    <title>Vencimiento - Cuentas por Pagar</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-grid">
+      <header class="topbar">
+        <aside class="topbar-column">
+          <div class="brand-block">
+            <span class="brand-title">Vencimiento</span>
+            <span class="brand-subtitle">Cuentas por pagar</span>
+          </div>
+          <nav class="nav-menu desktop-nav" aria-label="Menú principal">
+            <button class="nav-link active" data-page="dashboard">
+              <span class="nav-icon" aria-hidden="true">📊</span> Dashboard
+            </button>
+            <button class="nav-link" data-page="accounts">
+              <span class="nav-icon" aria-hidden="true">📋</span> Mis Cuentas
+            </button>
+            <button class="nav-link" data-page="calendar">
+              <span class="nav-icon" aria-hidden="true">📅</span> Calendario
+            </button>
+            <button class="nav-link" data-page="bot-settings">
+              <span class="nav-icon" aria-hidden="true">⚙️</span> Recordatorios
+            </button>
+          </nav>
+        </aside>
+        <div class="topbar-right">
+          <button type="button" class="fab-register desktop-fab" id="fabRegister" aria-label="Registrar cuenta">
+            + Nueva cuenta
+          </button>
+          <div class="profile-card">
+            <div class="profile-avatar">AM</div>
+            <div>
+              <p class="profile-name">Alejandro M.</p>
+              <p class="profile-plan">Hogar + Empresa</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="page active-page">
+          <header class="dashboard-header">
+            <div>
+              <p class="welcome">Hola, Alejandro</p>
+              <p class="headline">Tienes <span id="dueCount">0</span> cuentas por vencer esta semana.</p>
+            </div>
+          </header>
+
+          <section class="cards-row">
+            <article class="card total-card">
+              <div class="card-title">Total por pagar</div>
+              <div class="card-value" id="totalAmount">0 US$</div>
+              <div class="card-note" id="nextPaymentNote">Próximo: --</div>
+            </article>
+
+            <article class="card reminders-card">
+              <div class="card-title">Recordatorios activos</div>
+              <div class="reminders-status" id="reminderStatus">3 canales</div>
+              <div class="reminder-chips" id="activeReminderChips">
+                <span class="chip chip-whatsapp">WhatsApp</span>
+                <span class="chip chip-email">Correo</span>
+                <span class="chip chip-chat">Chat / Bot</span>
+              </div>
+            </article>
+
+            <article class="card register-card">
+              <div class="card-title">Registrar cuenta</div>
+              <div class="register-actions">
+                <button type="button" class="action-button photo-button" data-modal="photo">
+                  <span class="action-icon" aria-hidden="true">📷</span>
+                  Foto
+                </button>
+                <button type="button" class="action-button bot-button" data-modal="bot">
+                  <span class="action-icon" aria-hidden="true">💬</span>
+                  Chat Bot
+                </button>
+              </div>
+              <button type="button" class="primary-button register-manual" data-modal="manual">
+                + Registro manual
+              </button>
+            </article>
+          </section>
+
+          <section class="panel panel-upcoming">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Próximos vencimientos</p>
+                <h2>Pagos por vencer</h2>
+              </div>
+              <button class="link-button" data-page="calendar">Ver calendario →</button>
+            </div>
+            <ul class="payment-list" id="paymentList">
+              <li class="empty-state">Aún no has agregado pagos. ¡Registra tu primer pago!</li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- MIS CUENTAS -->
+        <section id="accounts" class="page">
+          <header class="page-header">
+            <div>
+              <p class="eyebrow">Mis Cuentas</p>
+              <h1><span id="accountCount">0</span> cuentas · <span id="accountTotal">0</span> US$</h1>
+            </div>
+            <button type="button" class="primary-button new-account" data-modal="manual">+ Nueva cuenta</button>
+          </header>
+
+          <div class="account-filters">
+            <input id="accountSearch" type="search" placeholder="Buscar por nombre o proveedor..." />
+            <div class="filter-tabs">
+              <button class="tab-button active" data-filter="all">Todos</button>
+              <button class="tab-button" data-filter="vencido">Vencidos</button>
+              <button class="tab-button" data-filter="por-vencer">Por vencer</button>
+              <button class="tab-button" data-filter="pendiente">Pendientes</button>
+              <button class="tab-button" data-filter="pagado">Pagados</button>
+            </div>
+            <div class="category-chips" id="categoryFilters">
+              <button class="category-chip active" data-category="all">Todas</button>
+              <button class="category-chip" data-category="servicios">Servicios públicos</button>
+              <button class="category-chip" data-category="telefonia">Telefonía</button>
+              <button class="category-chip" data-category="tarjeta">Tarjetas</button>
+              <button class="category-chip" data-category="credito">Créditos</button>
+              <button class="category-chip" data-category="otro">Otros</button>
+            </div>
+          </div>
+
+          <div class="account-cards" id="accountCards"></div>
+        </section>
+
+        <!-- CALENDARIO -->
+        <section id="calendar" class="page">
+          <header class="page-header">
+            <div>
+              <p class="eyebrow">Calendario</p>
+              <h1 id="calendarTitle">Junio 2026</h1>
+            </div>
+            <div class="calendar-controls">
+              <button type="button" class="ghost-button" id="prevMonth" aria-label="Mes anterior">‹</button>
+              <button type="button" class="ghost-button" id="nextMonth" aria-label="Mes siguiente">›</button>
+              <button type="button" class="primary-button new-account" data-modal="manual">+ Nueva cuenta</button>
+            </div>
+          </header>
+
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span>
+            <span>Jue</span><span>Vie</span><span>Sáb</span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </section>
+
+        <!-- AJUSTES RECORDATORIOS -->
+        <section id="bot-settings" class="page">
+          <header class="page-header">
+            <div>
+              <p class="eyebrow">Recordatorios</p>
+              <h1>Cómo y cuándo te avisamos</h1>
+            </div>
+          </header>
+
+          <div class="settings-panel">
+            <div class="settings-block">
+              <p class="settings-title">Canales de recordatorio</p>
+              <div class="toggle-card">
+                <div>
+                  <p class="toggle-label">WhatsApp</p>
+                  <p class="toggle-subtitle">El canal más usado. Mensaje antes del vencimiento.</p>
+                  <p class="toggle-meta">+57 300 000 0000</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggleWhatsapp" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="toggle-card">
+                <div>
+                  <p class="toggle-label">Correo electrónico</p>
+                  <p class="toggle-subtitle">Resumen y avisos en tu bandeja de entrada.</p>
+                  <p class="toggle-meta">alejandro@correo.com</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggleEmail" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="toggle-card">
+                <div>
+                  <p class="toggle-label">Chat / Bot en la app</p>
+                  <p class="toggle-subtitle">Notificaciones dentro de la app con el asistente.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggleChat" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-block">
+              <p class="settings-title">Anticipación de avisos</p>
+              <div class="form-grid">
+                <label>
+                  Primer aviso
+                  <select id="firstAlert">
+                    <option value="1">1 día antes</option>
+                    <option value="3" selected>3 días antes</option>
+                    <option value="5">5 días antes</option>
+                    <option value="7">1 semana antes</option>
+                  </select>
+                </label>
+                <label>
+                  Recordatorio final
+                  <select id="finalAlert">
+                    <option value="0" selected>El mismo día</option>
+                    <option value="1">1 día antes</option>
+                    <option value="2">2 días antes</option>
+                  </select>
+                </label>
+                <label>
+                  Hora de envío
+                  <input id="sendHour" type="time" value="09:00" />
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="repeatIfNotPaid" checked />
+                  Repetir si no pago
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Navegación móvil (Android / web móvil) -->
+      <nav class="bottom-nav mobile-nav" aria-label="Navegación móvil">
+        <button class="bottom-nav-item active" data-page="dashboard">
+          <span class="bottom-nav-icon" aria-hidden="true">📊</span>
+          <span>Inicio</span>
+        </button>
+        <button class="bottom-nav-item" data-page="accounts">
+          <span class="bottom-nav-icon" aria-hidden="true">📋</span>
+          <span>Cuentas</span>
+        </button>
+        <button type="button" class="bottom-nav-fab" id="mobileFabRegister" aria-label="Registrar cuenta">+</button>
+        <button class="bottom-nav-item" data-page="calendar">
+          <span class="bottom-nav-icon" aria-hidden="true">📅</span>
+          <span>Calendario</span>
+        </button>
+        <button class="bottom-nav-item" data-page="bot-settings">
+          <span class="bottom-nav-icon" aria-hidden="true">🔔</span>
+          <span>Avisos</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Overlay de registro rápido (móvil) -->
+    <div class="register-sheet hidden" id="registerSheet" role="dialog" aria-modal="true" aria-labelledby="registerSheetTitle">
+      <div class="register-sheet-backdrop" data-close-sheet></div>
+      <div class="register-sheet-panel">
+        <h2 id="registerSheetTitle">¿Cómo quieres registrar?</h2>
+        <button type="button" class="sheet-option" data-modal="manual">
+          <span aria-hidden="true">✏️</span>
+          <div>
+            <strong>Manual</strong>
+            <p>Completa el formulario paso a paso</p>
+          </div>
+        </button>
+        <button type="button" class="sheet-option" data-modal="photo">
+          <span aria-hidden="true">📷</span>
+          <div>
+            <strong>Foto de factura</strong>
+            <p>Escanea o sube una imagen</p>
+          </div>
+        </button>
+        <button type="button" class="sheet-option" data-modal="bot">
+          <span aria-hidden="true">💬</span>
+          <div>
+            <strong>Chat con el bot</strong>
+            <p>Describe el pago en lenguaje natural</p>
+          </div>
+        </button>
+        <button type="button" class="ghost-button sheet-cancel" data-close-sheet>Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Modal: Registro manual -->
+    <div class="modal-overlay hidden" id="modalManual" role="dialog" aria-modal="true" aria-labelledby="manualModalTitle">
+      <div class="modal">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Nueva cuenta</p>
+            <h2 id="manualModalTitle">Registro manual</h2>
+          </div>
+          <button type="button" class="modal-close" data-close-modal aria-label="Cerrar">×</button>
+        </header>
+
+        <form id="manualForm" class="modal-body">
+          <div class="form-section">
+            <p class="form-section-title">Información básica</p>
+            <div class="form-grid">
+              <label class="full-width">
+                Nombre del pago
+                <input type="text" name="title" required placeholder="Ej. Luz del hogar" />
+              </label>
+              <label>
+                Proveedor / entidad
+                <input type="text" name="provider" required placeholder="Ej. Enel, Claro, Banco..." />
+              </label>
+              <label>
+                Categoría
+                <select name="category" required>
+                  <option value="servicios">Servicios públicos</option>
+                  <option value="telefonia">Telefonía / Internet</option>
+                  <option value="tarjeta">Tarjeta de crédito</option>
+                  <option value="credito">Crédito bancario</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </label>
+              <label>
+                Contexto
+                <select name="context">
+                  <option value="hogar">Hogar</option>
+                  <option value="empresa">Empresa</option>
+                  <option value="ambos">Hogar y empresa</option>
+                </select>
+              </label>
+              <label>
+                Monto (US$)
+                <input type="number" name="amount" required min="0" step="0.01" placeholder="0.00" />
+              </label>
+              <label>
+                Icono
+                <select name="icon">
+                  <option value="⚡">⚡ Servicios</option>
+                  <option value="💳">💳 Tarjeta</option>
+                  <option value="📶">📶 Telecom</option>
+                  <option value="💧">💧 Agua</option>
+                  <option value="🔥">🔥 Gas</option>
+                  <option value="🚗">🚗 Vehículo</option>
+                  <option value="🏦">🏦 Banco</option>
+                  <option value="🛡️">🛡️ Seguro</option>
+                  <option value="📄">📄 Otro</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <p class="form-section-title">Tipo y fechas</p>
+            <div class="segmented-control" role="group" aria-label="Tipo de pago">
+              <label class="segment active">
+                <input type="radio" name="paymentType" value="recurrente" checked />
+                Recurrente
+              </label>
+              <label class="segment">
+                <input type="radio" name="paymentType" value="puntual" />
+                Puntual (no recurrente)
+              </label>
+            </div>
+
+            <div id="recurrenceFields" class="form-grid">
+              <label>
+                Frecuencia
+                <select name="frequency">
+                  <option value="mensual">Mensual</option>
+                  <option value="quincenal">Quincenal</option>
+                  <option value="semanal">Semanal</option>
+                  <option value="anual">Anual</option>
+                </select>
+              </label>
+              <label>
+                Día de vencimiento
+                <input type="number" name="dueDay" min="1" max="31" placeholder="Ej. 15" />
+              </label>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Fecha de vencimiento
+                <input type="date" name="dueDate" required />
+              </label>
+              <label>
+                Inicio del período sin mora
+                <input type="date" name="periodStart" />
+              </label>
+              <label>
+                Fin del período sin mora
+                <input type="date" name="periodEnd" />
+              </label>
+            </div>
+            <p class="form-hint">El período indica el rango de fechas en el que puedes pagar sin incurrir en recargos.</p>
+          </div>
+
+          <div class="form-section">
+            <p class="form-section-title">Recordatorios para esta cuenta</p>
+            <div class="checkbox-group">
+              <label class="checkbox-card">
+                <input type="checkbox" name="reminderWhatsapp" checked />
+                <span>WhatsApp</span>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="reminderEmail" checked />
+                <span>Correo</span>
+              </label>
+              <label class="checkbox-card">
+                <input type="checkbox" name="reminderChat" checked />
+                <span>Chat / Bot</span>
+              </label>
+            </div>
+          </div>
+
+          <label class="full-width">
+            Notas (opcional)
+            <textarea name="notes" rows="2" placeholder="Número de contrato, referencia de pago..."></textarea>
+          </label>
+        </form>
+
+        <footer class="modal-footer">
+          <button type="button" class="ghost-button" data-close-modal>Cancelar</button>
+          <button type="submit" form="manualForm" class="primary-button">Guardar cuenta</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal: Foto -->
+    <div class="modal-overlay hidden" id="modalPhoto" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
+      <div class="modal modal-photo">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Registro por foto</p>
+            <h2 id="photoModalTitle">Escanea tu factura</h2>
+          </div>
+          <button type="button" class="modal-close" data-close-modal aria-label="Cerrar">×</button>
+        </header>
+
+        <div class="modal-body">
+          <div class="photo-dropzone" id="photoDropzone">
+            <input type="file" id="photoInput" accept="image/*" capture="environment" hidden />
+            <div class="photo-placeholder" id="photoPlaceholder">
+              <span class="photo-icon" aria-hidden="true">📷</span>
+              <p>Arrastra una imagen o toca para capturar</p>
+              <p class="form-hint">Soporta facturas de servicios, tarjetas y créditos</p>
+            </div>
+            <img id="photoPreview" class="photo-preview hidden" alt="Vista previa de factura" />
+          </div>
+
+          <div id="photoExtracted" class="photo-extracted hidden">
+            <p class="form-section-title">Datos detectados (revisa y ajusta)</p>
+            <div class="form-grid">
+              <label class="full-width">
+                Proveedor detectado
+                <input type="text" id="photoProvider" />
+              </label>
+              <label>
+                Monto detectado
+                <input type="number" id="photoAmount" step="0.01" />
+              </label>
+              <label>
+                Vencimiento detectado
+                <input type="date" id="photoDueDate" />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="ghost-button" data-close-modal>Cancelar</button>
+          <button type="button" class="primary-button" id="photoConfirm" disabled>Confirmar y guardar</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal: Chat Bot -->
+    <div class="modal-overlay hidden" id="modalBot" role="dialog" aria-modal="true" aria-labelledby="botModalTitle">
+      <div class="modal modal-bot">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Asistente</p>
+            <h2 id="botModalTitle">Chat con el bot</h2>
+          </div>
+          <button type="button" class="modal-close" data-close-modal aria-label="Cerrar">×</button>
+        </header>
+
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages" role="log" aria-live="polite"></div>
+          <div class="chat-suggestions" id="chatSuggestions">
+            <button type="button" class="suggestion-chip" data-suggestion="Registrar luz Enel $85 vence el 15 de junio">
+              Luz Enel $85
+            </button>
+            <button type="button" class="suggestion-chip" data-suggestion="Agregar tarjeta Visa del banco, pago mínimo $200 el día 20">
+              Tarjeta Visa
+            </button>
+            <button type="button" class="suggestion-chip" data-suggestion="Crédito vehículo banco, cuota mensual $420">
+              Crédito auto
+            </button>
+          </div>
+          <form class="chat-input-bar" id="chatForm">
+            <input type="text" id="chatInput" placeholder="Ej: Agregar internet Claro $45, vence el 17..." autocomplete="off" />
+            <button type="submit" class="primary-button chat-send" aria-label="Enviar">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
