@@ -1,11 +1,14 @@
-const CACHE_NAME = 'vencely-v3';
+const CACHE_NAME = 'vencely-v7';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './auth.js',
-  './auth-config.example.js',
+  './sync.js',
+  './admin.js',
+  './auth-config.js',
+  './sync-config.js',
   './manifest.json',
   './icons/icon-192.svg',
   './icons/icon-512.svg',
@@ -25,8 +28,26 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+self.addEventListener('sync', (event) => {
+  if (event.tag !== 'vencely-sync') return;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      clients.forEach((client) => client.postMessage({ type: 'SYNC_REQUEST' }));
+    })
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => (response.ok ? response : caches.match('./index.html')))
+        .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

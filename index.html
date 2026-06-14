@@ -11,6 +11,17 @@
     <meta name="apple-mobile-web-app-title" content="Vencely" />
     <meta name="format-detection" content="telephone=no" />
     <title>Vencely - Cuentas por Pagar</title>
+    <script>
+      (function () {
+        var path = (location.pathname || '/').replace(/\/$/, '') || '/';
+        if (path === '/' || path === '/index.html') return;
+        var page = path.slice(1).split('/')[0];
+        var routes = { dashboard: 1, accounts: 1, calendar: 1, profile: 1, 'bot-settings': 1, admin: 1 };
+        if (!routes[page]) return;
+        var hash = page === 'admin' ? '#admin' : page === 'dashboard' ? '' : '#' + page;
+        location.replace('/' + location.search + hash);
+      })();
+    </script>
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icons/icon-512.svg" />
@@ -39,7 +50,7 @@
           <p class="auth-brand-subtitle">Tu guardia de facturas. Nunca más una mora.</p>
         </div>
 
-        <div class="auth-card">
+        <div class="auth-card" id="authCardMain">
           <header class="auth-header">
             <h2 id="authTitle">Iniciar sesión</h2>
             <p id="authSubtitle">Accede para gestionar tus cuentas por pagar</p>
@@ -54,7 +65,21 @@
             </label>
             <label>
               Contraseña
-              <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" minlength="6" />
+              <div class="password-field">
+                <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" minlength="6" />
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                  <svg class="password-toggle-icon password-toggle-icon--show" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg class="password-toggle-icon password-toggle-icon--hide hidden" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                  </svg>
+                </button>
+              </div>
             </label>
             <button type="submit" class="primary-button auth-submit">Iniciar sesión</button>
           </form>
@@ -75,11 +100,39 @@
             </label>
             <label>
               Contraseña
-              <input type="password" name="password" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6" />
+              <div class="password-field">
+                <input type="password" name="password" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6" />
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                  <svg class="password-toggle-icon password-toggle-icon--show" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg class="password-toggle-icon password-toggle-icon--hide hidden" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                  </svg>
+                </button>
+              </div>
             </label>
             <label>
               Confirmar contraseña
-              <input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Repite tu contraseña" minlength="6" />
+              <div class="password-field">
+                <input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Repite tu contraseña" minlength="6" />
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                  <svg class="password-toggle-icon password-toggle-icon--show" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg class="password-toggle-icon password-toggle-icon--hide hidden" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                  </svg>
+                </button>
+              </div>
             </label>
             <button type="submit" class="primary-button auth-submit">Crear cuenta</button>
           </form>
@@ -95,10 +148,149 @@
             <span id="authSwitchText">¿No tienes cuenta?</span>
             <button type="button" id="authSwitchBtn" class="link-button auth-switch-btn">Regístrate</button>
           </p>
+
+          <p class="auth-admin-access">
+            <button type="button" id="btnAdminAccess" class="link-button auth-admin-btn">Acceso administrador</button>
+          </p>
+        </div>
+
+        <div id="googlePhonePrompt" class="auth-card auth-phone-prompt hidden" aria-label="Número de WhatsApp">
+          <header class="auth-header">
+            <h2>¿Tu número de WhatsApp?</h2>
+            <p>Es opcional, pero lo usamos para enviarte recordatorios de vencimientos.</p>
+          </header>
+
+          <div id="googlePhoneError" class="auth-error hidden" role="alert"></div>
+
+          <label class="auth-form">
+            Celular (WhatsApp)
+            <input type="tel" id="googlePhoneInput" autocomplete="tel" inputmode="tel" placeholder="+57 300 123 4567" />
+            <span class="field-hint">Colombia: 10 dígitos o +57. Puedes omitirlo y agregarlo después en Avisos.</span>
+          </label>
+
+          <div class="auth-phone-actions">
+            <button type="button" id="btnGooglePhoneSave" class="primary-button auth-submit">Continuar</button>
+            <button type="button" id="btnGooglePhoneSkip" class="ghost-button auth-phone-skip">Omitir por ahora</button>
+          </div>
+        </div>
+
+        <div id="adminLoginPanel" class="auth-card hidden" aria-label="Acceso administrador">
+          <header class="auth-header">
+            <h2>Panel administrador</h2>
+            <p>Visualiza usuarios, cuentas y actividad del sistema desplegado.</p>
+          </header>
+
+          <div id="adminLoginError" class="auth-error hidden" role="alert"></div>
+
+          <form id="adminLoginForm" class="auth-form" novalidate>
+            <label>
+              Correo administrador
+              <input type="email" name="email" required autocomplete="username" placeholder="admin@vencely.app" />
+            </label>
+            <label>
+              Contraseña
+              <div class="password-field">
+                <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" />
+                <button type="button" class="password-toggle" aria-label="Mostrar contraseña" aria-pressed="false">
+                  <svg class="password-toggle-icon password-toggle-icon--show" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <svg class="password-toggle-icon password-toggle-icon--hide hidden" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                  </svg>
+                </button>
+              </div>
+            </label>
+            <button type="submit" class="primary-button auth-submit">Entrar al panel</button>
+          </form>
+
+          <p class="auth-switch">
+            <button type="button" id="btnAdminBackToUser" class="link-button auth-switch-btn">← Volver a acceso de usuario</button>
+          </p>
         </div>
 
         <p class="auth-footer-note">Modo híbrido: datos locales en el dispositivo y sincronización en la nube cuando el API está configurado.</p>
       </div>
+    </div>
+
+    <!-- Panel administrador -->
+    <div id="adminShell" class="admin-shell hidden" aria-label="Panel administrador Vencely">
+      <header class="admin-topbar">
+        <div class="admin-topbar-brand">
+          <span class="admin-badge">Admin</span>
+          <div>
+            <strong>Vencely</strong>
+            <span class="admin-topbar-sub">Panel del sistema</span>
+          </div>
+        </div>
+        <div class="admin-topbar-actions">
+          <span class="admin-session" id="adminSessionEmail">admin@vencely.app</span>
+          <button type="button" class="ghost-button admin-refresh-btn" id="adminRefreshBtn">Actualizar</button>
+          <button type="button" class="primary-button admin-logout-btn" id="btnAdminLogout">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <main class="admin-main">
+        <header class="admin-page-header">
+          <div>
+            <p class="eyebrow">Visión global</p>
+            <h1>Datos desplegados en el servidor</h1>
+            <p class="admin-status-note" id="adminStatusNote">Cargando…</p>
+          </div>
+        </header>
+
+        <section class="admin-kpis" id="adminKpis" aria-label="Indicadores"></section>
+
+        <section class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <p class="eyebrow">Usuarios</p>
+              <h2>Registrados en la nube</h2>
+            </div>
+          </div>
+          <div id="adminUsersTable"></div>
+        </section>
+
+        <section class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <p class="eyebrow">Cuentas</p>
+              <h2>Todas las cuentas del sistema</h2>
+            </div>
+            <div class="admin-filters">
+              <input type="search" id="adminAccountSearch" placeholder="Buscar cuenta, proveedor o usuario…" />
+              <select id="adminFilterStatus" aria-label="Filtrar por estado">
+                <option value="all">Todos los estados</option>
+                <option value="vencido">Vencido</option>
+                <option value="por-vencer">Por vencer</option>
+                <option value="programado">Programado</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="pagado">Pagado</option>
+              </select>
+              <select id="adminFilterContext" aria-label="Filtrar por contexto">
+                <option value="all">Hogar + Empresa</option>
+                <option value="hogar">Hogar</option>
+                <option value="empresa">Empresa</option>
+              </select>
+            </div>
+          </div>
+          <div id="adminAccountsTable"></div>
+        </section>
+
+        <section class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <p class="eyebrow">Actividad</p>
+              <h2>Sincronizaciones recientes</h2>
+            </div>
+          </div>
+          <div id="adminSyncLog"></div>
+        </section>
+      </main>
     </div>
 
     <div class="app-shell hidden" id="appShell">
@@ -141,21 +333,26 @@
         </nav>
 
         <div class="sidebar-footer">
-          <div class="profile-card" id="sidebarProfile">
+          <button type="button" class="profile-card" id="sidebarProfile" data-page="profile" aria-label="Ver mi perfil">
             <div class="profile-avatar" id="profileAvatar">?</div>
-            <div>
+            <div class="profile-card-copy">
               <p class="profile-name" id="profileName">Usuario</p>
-              <p class="profile-plan">Hogar + Empresa</p>
+              <p class="profile-plan" id="profilePlan">Hogar + Empresa</p>
             </div>
-          </div>
+          </button>
         </div>
       </aside>
 
       <div class="app-main">
         <header class="page-topbar">
-          <div class="mobile-brand mobile-only">
-            <span class="brand-title">Vencely</span>
-            <span class="brand-subtitle">Sin moras. Sin olvidos.</span>
+          <div class="mobile-topbar-start mobile-only">
+            <div class="mobile-brand">
+              <span class="brand-title">Vencely</span>
+              <span class="brand-subtitle">Sin moras. Sin olvidos.</span>
+            </div>
+            <button type="button" class="mobile-profile-btn" id="mobileProfileBtn" data-page="profile" aria-label="Ver mi perfil">
+              <span class="profile-avatar mobile-profile-avatar" id="mobileProfileAvatar">?</span>
+            </button>
           </div>
           <div class="sede-switcher-wrap">
             <span class="sede-switcher-label">Casa / Sede</span>
@@ -317,6 +514,13 @@
                   </div>
                 </div>
               </div>
+
+              <div class="filter-section" id="accountsSedeFilterSection" hidden>
+                <span class="filter-section-label">Sede</span>
+                <div class="filter-scroll-wrap">
+                  <div class="sede-chips" id="accountsSedeFilters" role="group" aria-label="Filtrar por sede"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -325,24 +529,142 @@
 
         <!-- CALENDARIO -->
         <section id="calendar" class="page">
-          <header class="page-header">
+          <header class="page-header calendar-page-header">
             <div>
               <p class="eyebrow">Calendario</p>
-              <h1 id="calendarTitle">Junio 2026</h1>
+              <h1 class="calendar-page-heading">Pagos programados</h1>
             </div>
             <div class="calendar-controls">
-              <button type="button" class="ghost-button" id="prevMonth" aria-label="Mes anterior">‹</button>
-              <button type="button" class="ghost-button" id="nextMonth" aria-label="Mes siguiente">›</button>
               <button type="button" class="primary-button new-account" data-modal="manual">+ Nueva cuenta</button>
             </div>
           </header>
 
           <div class="calendar-shell">
+            <div class="calendar-toolbar">
+              <button type="button" class="calendar-nav-btn" id="prevMonth" aria-label="Mes anterior">
+                <span aria-hidden="true">‹</span>
+              </button>
+              <h2 id="calendarTitle" class="calendar-month-title">Junio 2026</h2>
+              <button type="button" class="calendar-nav-btn" id="nextMonth" aria-label="Mes siguiente">
+                <span aria-hidden="true">›</span>
+              </button>
+            </div>
+
+            <div class="calendar-legend" aria-label="Leyenda de estados">
+              <span class="calendar-legend-item"><span class="calendar-legend-dot vencido"></span>Vencido</span>
+              <span class="calendar-legend-item"><span class="calendar-legend-dot por-vencer"></span>Por vencer</span>
+              <span class="calendar-legend-item"><span class="calendar-legend-dot pendiente"></span>Pendiente</span>
+              <span class="calendar-legend-item"><span class="calendar-legend-dot pagado"></span>Pagado</span>
+            </div>
+
             <div class="calendar-weekdays" aria-hidden="true">
               <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span>
               <span>Jue</span><span>Vie</span><span>Sáb</span>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+        </section>
+
+        <!-- MI PERFIL -->
+        <section id="profile" class="page">
+          <header class="page-header">
+            <div>
+              <p class="eyebrow">Tu cuenta</p>
+              <h1>Mi perfil</h1>
+            </div>
+          </header>
+
+          <div class="profile-page">
+            <div class="profile-hero">
+              <div class="profile-hero-avatar" id="profilePageAvatar">?</div>
+              <h2 class="profile-hero-name" id="profilePageName">Usuario</h2>
+              <p class="profile-hero-plan" id="profilePagePlan">Hogar + Empresa</p>
+              <p class="profile-hero-provider" id="profilePageProvider">—</p>
+            </div>
+
+            <div class="profile-stats-row">
+              <article class="profile-stat-card">
+                <span class="profile-stat-value" id="profileStatAccounts">0</span>
+                <span class="profile-stat-label">Cuentas</span>
+              </article>
+              <article class="profile-stat-card">
+                <span class="profile-stat-value" id="profileStatSedes">0</span>
+                <span class="profile-stat-label">Sedes</span>
+              </article>
+              <article class="profile-stat-card profile-stat-card--accent">
+                <span class="profile-stat-value" id="profileStatPending">$ 0</span>
+                <span class="profile-stat-label">Total pendiente</span>
+              </article>
+            </div>
+
+            <div class="settings-panel profile-details">
+              <div class="settings-block">
+                <p class="settings-title">Datos de contacto</p>
+                <dl class="profile-data-list">
+                  <div class="profile-data-row">
+                    <dt>Correo</dt>
+                    <dd id="profilePageEmail">—</dd>
+                  </div>
+                  <div class="profile-data-row">
+                    <dt>Celular (WhatsApp)</dt>
+                    <dd id="profilePagePhone">—</dd>
+                  </div>
+                  <div class="profile-data-row">
+                    <dt>Método de acceso</dt>
+                    <dd id="profilePageLoginMethod">—</dd>
+                  </div>
+                  <div class="profile-data-row">
+                    <dt>Sesión iniciada</dt>
+                    <dd id="profilePageLoggedIn">—</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div class="settings-block">
+                <p class="settings-title">Editar perfil</p>
+                <div class="profile-edit-form">
+                  <label>
+                    Nombre completo
+                    <input type="text" id="profileNameInput" autocomplete="name" placeholder="Tu nombre" />
+                  </label>
+                  <p class="field-hint" id="profileNameHint">Actualiza cómo te saludamos en la app.</p>
+                  <button type="button" class="ghost-button" id="btnSaveProfileName">Guardar nombre</button>
+                </div>
+                <div class="profile-edit-form">
+                  <label>
+                    Celular para WhatsApp
+                    <input type="tel" id="profilePhoneInput" autocomplete="tel" inputmode="tel" placeholder="+57 300 123 4567" />
+                  </label>
+                  <p class="field-hint">Formato Colombia: 10 dígitos (ej. 3001234567) o prefijo +57.</p>
+                  <button type="button" class="ghost-button" id="btnSaveProfilePhone">Guardar celular</button>
+                </div>
+              </div>
+
+              <div class="settings-block">
+                <p class="settings-title">Sincronización automática</p>
+                <p class="settings-subtitle">Tus cuentas y sedes se sincronizan con la nube al guardar, al reconectar y cada 5 minutos.</p>
+                <div class="sync-status-card">
+                  <div class="sync-status-row">
+                    <span class="sync-status-dot" id="profileSyncIndicator" aria-hidden="true"></span>
+                    <div>
+                      <p class="sync-status-text" id="profileSyncText">Comprobando estado…</p>
+                      <p class="sync-status-meta" id="profileLastSynced">—</p>
+                    </div>
+                  </div>
+                  <button type="button" class="ghost-button" id="btnProfileSyncNow">Forzar sync</button>
+                </div>
+              </div>
+
+              <div class="settings-block">
+                <div class="account-session-card">
+                  <div class="account-session-info">
+                    <p class="account-session-name" id="profileSessionName">Usuario</p>
+                    <p class="account-session-hint">Sesión activa en este dispositivo</p>
+                  </div>
+                  <button type="button" class="ghost-button auth-logout-btn" id="btnProfileLogout">Cerrar sesión</button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -423,8 +745,8 @@
             </div>
 
             <div class="settings-block">
-              <p class="settings-title">Sincronización en la nube</p>
-              <p class="settings-subtitle">Tus cuentas y sedes se guardan localmente y se sincronizan con el servidor cuando hay conexión.</p>
+              <p class="settings-title">Sincronización automática</p>
+              <p class="settings-subtitle">Tus cuentas y sedes se guardan localmente y se sincronizan automáticamente con el servidor cuando hay conexión.</p>
               <div class="sync-status-card">
                 <div class="sync-status-row">
                   <span class="sync-status-dot" id="syncStatusIndicator" aria-hidden="true"></span>
@@ -433,7 +755,7 @@
                     <p class="sync-status-meta" id="syncLastSynced">—</p>
                   </div>
                 </div>
-                <button type="button" class="primary-button" id="btnSyncNow">Sincronizar ahora</button>
+                <button type="button" class="ghost-button" id="btnSyncNow">Forzar sync</button>
               </div>
             </div>
 
@@ -443,7 +765,10 @@
                   <p class="account-session-name" id="settingsAccountName">Usuario</p>
                   <p class="account-session-hint">Sesión activa en este dispositivo</p>
                 </div>
-                <button type="button" class="ghost-button auth-logout-btn" id="btnLogout">Cerrar sesión</button>
+                <div class="account-session-actions">
+                  <button type="button" class="link-button" data-page="profile">Ver mi perfil →</button>
+                  <button type="button" class="ghost-button auth-logout-btn" id="btnLogout">Cerrar sesión</button>
+                </div>
               </div>
             </div>
 
@@ -736,7 +1061,18 @@
           <div id="photoExtracted" class="photo-extracted hidden">
             <p class="form-section-title">Datos detectados (revisa y ajusta)</p>
             <p id="photoExtractNote" class="form-hint photo-extract-note hidden"></p>
+            <div id="photoConfidence" class="photo-confidence hidden" aria-live="polite">
+              <span class="photo-confidence-label">Confianza global</span>
+              <div class="photo-confidence-bar" role="meter" aria-valuemin="0" aria-valuemax="100">
+                <div id="photoConfidenceFill" class="photo-confidence-fill"></div>
+              </div>
+              <span id="photoConfidencePct" class="photo-confidence-pct"></span>
+            </div>
             <div class="form-grid">
+              <label class="full-width">
+                Nombre de la cuenta
+                <input type="text" id="photoTitle" placeholder="Ej. Luz casa principal" />
+              </label>
               <label class="full-width">
                 Proveedor detectado
                 <input type="text" id="photoProvider" />
@@ -744,10 +1080,12 @@
               <label>
                 Monto detectado (<span data-currency-label>COP</span>)
                 <input type="number" id="photoAmount" step="1" />
+                <span id="photoAmountConf" class="field-confidence hidden"></span>
               </label>
               <label>
                 Vencimiento detectado
                 <input type="date" id="photoDueDate" />
+                <span id="photoDueDateConf" class="field-confidence hidden"></span>
               </label>
               <label>
                 Categoría sugerida
@@ -758,6 +1096,10 @@
                   <option value="credito">Crédito bancario</option>
                   <option value="otro">Otro</option>
                 </select>
+              </label>
+              <label>
+                N.º factura (opcional)
+                <input type="text" id="photoInvoiceNumber" placeholder="Referencia detectada" />
               </label>
               <label>
                 Casa / Sede
@@ -873,12 +1215,14 @@
     <!-- Toast -->
     <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
 
-    <script>window.AUTH_CONFIG = { GOOGLE_CLIENT_ID: '' };</script>
+    <script>window.AUTH_CONFIG = { GOOGLE_CLIENT_ID: '', GOOGLE_ANDROID_CLIENT_ID: '' };</script>
     <script>window.SYNC_CONFIG = { API_BASE_URL: 'http://localhost:3000' };</script>
     <script src="auth-config.js"></script>
     <script src="sync-config.js"></script>
+    <script src="dev-credentials.js"></script>
     <script src="auth.js"></script>
     <script src="sync.js"></script>
+    <script src="admin.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

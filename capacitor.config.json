@@ -3,9 +3,15 @@
   "appName": "Vencely",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "hostname": "localhost"
   },
   "android": {
     "backgroundColor": "#0b1321"
+  },
+  "plugins": {
+    "SocialLogin": {
+      "providers": ["google"]
+    }
   }
 }

@@ -18,6 +18,17 @@ const STORAGE_KEYS = {
   country: 'asistente_facturas_country',
 };
 
+const APP_PAGE_ROUTES = new Set(['dashboard', 'accounts', 'calendar', 'profile', 'bot-settings']);
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const COUNTRY_CONFIG = {
   CO: {
     id: 'CO',
@@ -124,6 +135,8 @@ const modals = {
 const sedeSwitcher = document.getElementById('sedeSwitcher');
 const sedeCardSwitcher = document.getElementById('sedeCardSwitcher');
 const sedeCardActive = document.getElementById('sedeCardActive');
+const accountsSedeFilterSection = document.getElementById('accountsSedeFilterSection');
+const accountsSedeFilters = document.getElementById('accountsSedeFilters');
 const sedesList = document.getElementById('sedesList');
 const sedeForm = document.getElementById('sedeForm');
 const dashboardSedeNote = document.getElementById('dashboardSedeNote');
@@ -166,7 +179,7 @@ function saveSedes(options = {}) {
     sedes = sedes.map((s) => (s.updatedAt ? s : touchUpdatedAt(s)));
     localStorage.setItem(STORAGE_KEYS.sedes, JSON.stringify(sedes));
     if (!options.skipSync && window.VencelySync?.isSyncEnabled?.()) {
-      window.VencelySync.performSync({ silent: true });
+      window.VencelySync.scheduleDebouncedSync?.();
     }
   } catch (e) {
     console.warn('No se pudieron guardar las sedes:', e);
@@ -178,7 +191,7 @@ function saveAccounts(options = {}) {
     accounts = accounts.map((a) => (a.updatedAt ? a : touchUpdatedAt(a)));
     localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
     if (!options.skipSync && window.VencelySync?.isSyncEnabled?.()) {
-      window.VencelySync.performSync({ silent: true });
+      window.VencelySync.scheduleDebouncedSync?.();
     }
   } catch (e) {
     console.warn('No se pudieron guardar las cuentas:', e);
@@ -322,7 +335,7 @@ function populateSedeSelects() {
   document.querySelectorAll('select[name="sedeId"], #photoSede').forEach((select) => {
     const current = select.value;
     select.innerHTML = sedes
-      .map((s) => `<option value="${s.id}">${s.icon} ${s.name}</option>`)
+      .map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.icon)} ${escapeHtml(s.name)}</option>`)
       .join('');
     select.value = sedes.some((s) => s.id === current) ? current : defaultId;
   });
@@ -333,7 +346,7 @@ function getSedeFilterLabel() {
 }
 
 function bindSedeChips(container) {
-  container.querySelectorAll('.sede-chip').forEach((chip) => {
+  container.querySelectorAll('[data-sede]').forEach((chip) => {
     chip.addEventListener('click', () => {
       selectedSedeFilter = chip.dataset.sede;
       saveSelectedSede();
@@ -343,12 +356,35 @@ function bindSedeChips(container) {
   });
 }
 
+function renderAccountsSedeFilter() {
+  if (!accountsSedeFilterSection || !accountsSedeFilters) return;
+
+  const showFilter = sedes.length >= 2;
+  accountsSedeFilterSection.hidden = !showFilter;
+  if (!showFilter) return;
+
+  accountsSedeFilters.innerHTML = [
+    `<button type="button" class="category-chip${selectedSedeFilter === 'all' ? ' active' : ''}" data-sede="all">
+      <span class="filter-chip-icon" aria-hidden="true">🏠</span>
+      Todas las sedes
+    </button>`,
+    ...sedes.map(
+      (s) =>
+        `<button type="button" class="category-chip${selectedSedeFilter === s.id ? ' active' : ''}" data-sede="${escapeHtml(s.id)}">
+          <span class="filter-chip-icon" aria-hidden="true">${escapeHtml(s.icon)}</span>
+          ${escapeHtml(s.name)}
+        </button>`
+    ),
+  ].join('');
+  bindSedeChips(accountsSedeFilters);
+}
+
 function renderSedeSwitcher() {
   const chipsHtml = [
     `<button type="button" class="sede-chip${selectedSedeFilter === 'all' ? ' active' : ''}" data-sede="all">Todas las sedes</button>`,
     ...sedes.map(
       (s) =>
-        `<button type="button" class="sede-chip${selectedSedeFilter === s.id ? ' active' : ''}" data-sede="${s.id}">${s.icon} ${s.name}</button>`
+        `<button type="button" class="sede-chip${selectedSedeFilter === s.id ? ' active' : ''}" data-sede="${escapeHtml(s.id)}">${escapeHtml(s.icon)} ${escapeHtml(s.name)}</button>`
     ),
   ].join('');
 
@@ -361,6 +397,8 @@ function renderSedeSwitcher() {
   if (sedeCardActive) {
     sedeCardActive.textContent = getSedeFilterLabel();
   }
+
+  renderAccountsSedeFilter();
 }
 
 function renderSedesManager() {
@@ -374,15 +412,15 @@ function renderSedesManager() {
     row.className = 'sede-row';
     row.innerHTML = `
       <div class="sede-row-info">
-        <span class="sede-row-icon">${sede.icon}</span>
+        <span class="sede-row-icon">${escapeHtml(sede.icon)}</span>
         <div>
-          <p class="sede-row-name">${sede.name}</p>
+          <p class="sede-row-name">${escapeHtml(sede.name)}</p>
           <p class="sede-row-meta">${usedCount} cuenta${usedCount !== 1 ? 's' : ''}</p>
         </div>
       </div>
       <div class="sede-row-actions">
-        <button type="button" class="ghost-button sede-edit-btn" data-sede-id="${sede.id}">Editar</button>
-        <button type="button" class="ghost-button sede-delete-btn" data-sede-id="${sede.id}"${sedes.length <= 1 ? ' disabled' : ''}>Eliminar</button>
+        <button type="button" class="ghost-button sede-edit-btn" data-sede-id="${escapeHtml(sede.id)}">Editar</button>
+        <button type="button" class="ghost-button sede-delete-btn" data-sede-id="${escapeHtml(sede.id)}"${sedes.length <= 1 ? ' disabled' : ''}>Eliminar</button>
       </div>
     `;
     sedesList.appendChild(row);
@@ -487,16 +525,206 @@ function deleteSede(sedeId) {
 function sedeBadgeHtml(sedeId) {
   const sede = getSedeById(sedeId);
   if (!sede) return '';
-  return `<span class="sede-badge" title="Casa / Sede">${sede.icon} ${sede.name}</span>`;
+  return `<span class="sede-badge" title="Casa / Sede">${escapeHtml(sede.icon)} ${escapeHtml(sede.name)}</span>`;
 }
 
-function switchPage(pageId) {
+function normalizeAppPathRoute() {
+  const path = location.pathname.replace(/\/$/, '') || '/';
+  if (path === '/' || path === '/index.html') return;
+  const pageId = path.slice(1).split('/')[0];
+  if (!APP_PAGE_ROUTES.has(pageId)) return;
+  const hash = pageId === 'dashboard' ? '' : `#${pageId}`;
+  setAppRouteHash(hash);
+}
+
+function getPageFromHash() {
+  if (location.hash === '#admin') return 'dashboard';
+  const hash = location.hash.replace('#', '');
+  return APP_PAGE_ROUTES.has(hash) ? hash : 'dashboard';
+}
+
+function handleAppHashRoute() {
+  if (location.hash === '#admin') return;
+  switchPage(getPageFromHash(), { updateHash: false });
+}
+
+function setAppRouteHash(targetHash) {
+  const base = `${location.pathname}${location.search}`;
+  const url = `${base}${targetHash}`;
+  try {
+    history.replaceState(null, '', url);
+  } catch {
+    location.hash = targetHash || '';
+  }
+}
+
+function switchPage(pageId, options = {}) {
+  const { updateHash = true } = options;
   pages.forEach((page) => page.classList.toggle('active-page', page.id === pageId));
   document.querySelectorAll('.nav-link, .bottom-nav-item').forEach((link) => {
     if (link.dataset.page) {
       link.classList.toggle('active', link.dataset.page === pageId);
     }
   });
+  if (updateHash) {
+    const targetHash = pageId === 'dashboard' ? '' : `#${pageId}`;
+    if (location.hash !== targetHash) {
+      setAppRouteHash(targetHash);
+    }
+  }
+  document.querySelector('.content')?.scrollTo?.(0, 0);
+  window.scrollTo(0, 0);
+  if (pageId === 'profile') renderProfilePage();
+}
+
+let accountHighlightTimer = null;
+
+function focusAccountCard(accountId) {
+  requestAnimationFrame(() => {
+    const card = accountCards?.querySelector(`[data-account-id="${accountId}"]`);
+    if (!card) {
+      showToast('No se encontró la cuenta en la lista');
+      return;
+    }
+    card.classList.add('is-highlighted');
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.focus({ preventScroll: true });
+    clearTimeout(accountHighlightTimer);
+    accountHighlightTimer = setTimeout(() => card.classList.remove('is-highlighted'), 2600);
+  });
+}
+
+function navigateToAccount(accountId) {
+  const account = accounts.find((a) => a.id === accountId);
+  if (!account) {
+    showToast('No se encontró la cuenta');
+    return;
+  }
+
+  if (selectedSedeFilter !== 'all' && account.sedeId !== selectedSedeFilter) {
+    selectedSedeFilter = account.sedeId;
+    saveSelectedSede();
+    renderSedeSwitcher();
+    renderAccountsSedeFilter();
+  }
+
+  activeCategoryFilter = 'all';
+  categoryChips.forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.category === 'all');
+  });
+  filterButtons.forEach((button) => {
+    button.classList.toggle('active', button.dataset.filter === 'all');
+  });
+  if (accountSearch) accountSearch.value = '';
+
+  switchPage('accounts');
+  renderAccounts('all', '');
+  focusAccountCard(accountId);
+}
+
+function handleCalendarEventActivate(eventEl) {
+  const accountId = eventEl?.dataset?.accountId;
+  if (accountId) navigateToAccount(accountId);
+}
+
+function attachNavigationListeners() {
+  const appShellEl = document.getElementById('appShell');
+  if (!appShellEl || attachNavigationListeners._attached) return;
+  attachNavigationListeners._attached = true;
+
+  appShellEl.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-page]');
+    if (!trigger || !appShellEl.contains(trigger)) return;
+    const pageId = trigger.dataset.page;
+    if (pageId) switchPage(pageId);
+  });
+}
+
+function getUserPlanLabel() {
+  const contexts = new Set(accounts.map((a) => a.context).filter(Boolean));
+  const hasHogar = contexts.has('hogar');
+  const hasEmpresa = contexts.has('empresa');
+  if (hasHogar && hasEmpresa) return 'Hogar + Empresa';
+  if (hasEmpresa) return 'Empresa';
+  if (hasHogar) return 'Hogar';
+  return 'Hogar + Empresa';
+}
+
+function renderProfilePage() {
+  if (typeof getCurrentUser !== 'function') return;
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const planLabel = getUserPlanLabel();
+  const pending = accounts.filter((a) => a.status !== 'pagado');
+  const pendingTotal = pending.reduce((sum, a) => sum + a.amount, 0);
+  const loginMethod = typeof getLoginMethodLabel === 'function'
+    ? getLoginMethodLabel(user.provider)
+    : (user.provider === 'google' ? 'Google' : 'Correo y contraseña');
+
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  const setAvatar = (id, sizeClass) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (user.picture) {
+      el.innerHTML = `<img src="${user.picture}" alt="" class="profile-avatar-img${sizeClass ? ` ${sizeClass}` : ''}" referrerpolicy="no-referrer" />`;
+    } else {
+      el.textContent = typeof getInitials === 'function' ? getInitials(user.name) : '?';
+    }
+  };
+
+  setAvatar('profilePageAvatar', 'profile-hero-avatar-img');
+  setText('profilePageName', user.name || 'Usuario');
+  setText('profilePagePlan', planLabel);
+  setText('profilePageProvider', loginMethod);
+  setText('profileStatAccounts', String(accounts.length));
+  setText('profileStatSedes', String(sedes.length));
+  setText('profileStatPending', formatCurrency(pendingTotal));
+  setText('profilePageEmail', user.email || '—');
+  setText('profilePagePhone', user.phone
+    ? (typeof formatPhoneDisplay === 'function' ? formatPhoneDisplay(user.phone) : user.phone)
+    : 'Sin celular configurado');
+  setText('profilePageLoginMethod', loginMethod);
+  setText('profilePageLoggedIn', user.loggedInAt
+    ? new Date(user.loggedInAt).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })
+    : '—');
+  setText('profileSessionName', user.name || 'Usuario');
+
+  const nameInput = document.getElementById('profileNameInput');
+  const nameHint = document.getElementById('profileNameHint');
+  const btnSaveName = document.getElementById('btnSaveProfileName');
+  if (nameInput && document.activeElement !== nameInput) {
+    nameInput.value = user.name || '';
+  }
+  if (user.provider === 'google') {
+    if (nameInput) {
+      nameInput.readOnly = true;
+      nameInput.classList.add('input-readonly');
+    }
+    if (nameHint) nameHint.textContent = 'Tu nombre proviene de Google y no se puede editar aquí.';
+    btnSaveName?.setAttribute('disabled', 'disabled');
+  } else {
+    if (nameInput) {
+      nameInput.readOnly = false;
+      nameInput.classList.remove('input-readonly');
+    }
+    if (nameHint) nameHint.textContent = 'Actualiza cómo te saludamos en la app.';
+    btnSaveName?.removeAttribute('disabled');
+  }
+
+  const phoneInput = document.getElementById('profilePhoneInput');
+  if (phoneInput && document.activeElement !== phoneInput) {
+    phoneInput.value = user.phone && typeof formatPhoneDisplay === 'function'
+      ? formatPhoneDisplay(user.phone)
+      : (user.phone || '');
+  }
+
+  if (typeof updateUserProfileUI === 'function') updateUserProfileUI();
+  window.VencelySync?.updateSyncUI?.();
 }
 
 function showToast(message) {
@@ -611,6 +839,9 @@ function refreshAll() {
   renderAccounts(activeTab, accountSearch.value);
   renderCalendar();
   updateReminderSummary();
+  if (document.getElementById('profile')?.classList.contains('active-page')) {
+    renderProfilePage();
+  }
 }
 
 function renderDashboard() {
@@ -661,20 +892,20 @@ function renderPaymentList(items) {
     item.innerHTML = `
       <div class="payment-item-header">
         <div>
-          <h3>${payment.icon || ''} ${payment.title}</h3>
+          <h3>${escapeHtml(payment.icon || '')} ${escapeHtml(payment.title)}</h3>
           <div class="payment-meta">
-            <span>${payment.provider}</span>
-            <span class="category-badge">${CATEGORY_LABELS[payment.category] || payment.category}</span>
+            <span>${escapeHtml(payment.provider)}</span>
+            <span class="category-badge">${escapeHtml(CATEGORY_LABELS[payment.category] || payment.category)}</span>
             ${sedeBadgeHtml(payment.sedeId)}
-            <span>${payment.type}</span>
-            <span>Vence: ${payment.dueDate}</span>
+            <span>${escapeHtml(payment.type)}</span>
+            <span>Vence: ${escapeHtml(payment.dueDate)}</span>
           </div>
         </div>
         <span class="status-pill ${getStatusClass(payment.status)}">${getStatusLabel(payment.status)}</span>
       </div>
       <div class="payment-meta">
         <span>${formatCurrency(payment.amount)}</span>
-        <span>🔔 ${payment.reminders.join(', ')}</span>
+        <span>🔔 ${escapeHtml((payment.reminders || []).join(', '))}</span>
       </div>
     `;
     paymentList.appendChild(item);
@@ -710,11 +941,13 @@ function renderAccounts(filter = 'all', query = '') {
   filtered.forEach((account) => {
     const card = document.createElement('div');
     card.className = `account-card payment-item--${getStatusClass(account.status)}`;
+    card.dataset.accountId = account.id;
+    card.tabIndex = -1;
     card.innerHTML = `
       <div class="account-card-header">
         <div class="account-detail">
-          <span class="account-provider"><span class="account-icon">${account.icon || '📄'}</span>${account.title}</span>
-          <p>${account.provider} · ${account.type} · ${CATEGORY_LABELS[account.category] || ''}</p>
+          <span class="account-provider"><span class="account-icon">${escapeHtml(account.icon || '📄')}</span>${escapeHtml(account.title)}</span>
+          <p>${escapeHtml(account.provider)} · ${escapeHtml(account.type)} · ${escapeHtml(CATEGORY_LABELS[account.category] || '')}</p>
           <div class="account-meta">${sedeBadgeHtml(account.sedeId)}</div>
         </div>
         <span class="status-pill ${getStatusClass(account.status)}">${getStatusLabel(account.status)}</span>
@@ -742,25 +975,30 @@ function renderCalendar() {
     if (d.getMonth() === calendarMonth && d.getFullYear() === calendarYear) {
       const day = d.getDate();
       if (!eventsByDay[day]) eventsByDay[day] = [];
-      eventsByDay[day].push({ label: a.title, type: getStatusClass(a.status) });
+      eventsByDay[day].push({ label: a.title, type: getStatusClass(a.status), accountId: a.id });
     }
   });
 
   for (let i = 0; i < firstDay; i += 1) {
     const cell = document.createElement('div');
-    cell.className = 'calendar-day other-month';
+    const weekday = i % 7;
+    cell.className = 'calendar-day other-month' + (weekday === 0 || weekday === 6 ? ' weekend' : '');
     calendarGrid.appendChild(cell);
   }
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     const cell = document.createElement('div');
+    const weekday = (firstDay + day - 1) % 7;
     const isToday =
       day === today.getDate() &&
       calendarMonth === today.getMonth() &&
       calendarYear === today.getFullYear();
 
-    cell.className = 'calendar-day' + (isToday ? ' today' : '');
+    cell.className = 'calendar-day'
+      + (isToday ? ' today' : '')
+      + (weekday === 0 || weekday === 6 ? ' weekend' : '');
     const dayLabel = document.createElement('span');
+    dayLabel.className = 'calendar-day-number';
     dayLabel.textContent = day;
     cell.appendChild(dayLabel);
 
@@ -770,8 +1008,12 @@ function renderCalendar() {
     events.forEach((event) => {
       const badge = document.createElement('div');
       badge.className = `calendar-event ${event.type}`;
+      badge.dataset.accountId = event.accountId;
       badge.textContent = event.label;
       badge.title = event.label;
+      badge.setAttribute('role', 'button');
+      badge.tabIndex = 0;
+      badge.setAttribute('aria-label', `Ver cuenta: ${event.label}`);
       cell.appendChild(badge);
     });
 
@@ -1158,18 +1400,77 @@ function setPhotoExtracting(loading) {
   }
 }
 
+function formatConfidencePct(value) {
+  const pct = Math.round((Number(value) || 0) * 100);
+  return `${pct}%`;
+}
+
+function setFieldConfidence(elId, score) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (score == null || Number.isNaN(score)) {
+    el.classList.add('hidden');
+    el.textContent = '';
+    return;
+  }
+  const pct = formatConfidencePct(score);
+  el.textContent = `Confianza: ${pct}`;
+  el.classList.remove('hidden');
+  el.classList.toggle('field-confidence--low', score < 0.5);
+  el.classList.toggle('field-confidence--high', score >= 0.7);
+}
+
 function applyExtractedData(extracted, sourceNote) {
   const categorySelect = document.getElementById('photoCategory');
+  const title = extracted.title || extracted.provider || '';
+  document.getElementById('photoTitle').value = title;
   document.getElementById('photoProvider').value = extracted.provider || '';
   document.getElementById('photoAmount').value = extracted.amount || '';
   document.getElementById('photoDueDate').value = extracted.dueDate || '';
+  document.getElementById('photoInvoiceNumber').value = extracted.invoice_number || '';
   if (categorySelect && extracted.category) {
     categorySelect.value = extracted.category;
   }
 
+  const fc = extracted.fieldConfidence || {};
+  setFieldConfidence('photoAmountConf', fc.amount);
+  setFieldConfidence('photoDueDateConf', fc.dueDate);
+
+  const confWrap = document.getElementById('photoConfidence');
+  const confFill = document.getElementById('photoConfidenceFill');
+  const confPct = document.getElementById('photoConfidencePct');
+  const confBar = confWrap?.querySelector('.photo-confidence-bar');
+  if (confWrap && extracted.confidence != null) {
+    const pct = Math.round(extracted.confidence * 100);
+    confFill.style.width = `${pct}%`;
+    confPct.textContent = formatConfidencePct(extracted.confidence);
+    if (confBar) {
+      confBar.setAttribute('aria-valuenow', String(pct));
+      confBar.setAttribute('aria-valuetext', `${pct} por ciento`);
+    }
+    confWrap.classList.remove('hidden');
+  } else {
+    confWrap?.classList.add('hidden');
+  }
+
   const noteEl = document.getElementById('photoExtractNote');
   if (noteEl) {
-    const note = sourceNote || extracted.note;
+    const parts = [];
+    if (sourceNote) parts.push(sourceNote);
+    if (extracted.source) {
+      const sourceLabels = {
+        gemini: 'Google Gemini',
+        openai: 'OpenAI Vision',
+        tesseract: 'OCR local (Tesseract)',
+        mock: 'Datos simulados',
+        custom: 'API personalizada',
+      };
+      parts.push(`Fuente: ${sourceLabels[extracted.source] || extracted.source}`);
+    }
+    if (extracted.currency && extracted.currency !== 'COP') {
+      parts.push(`Moneda: ${extracted.currency}`);
+    }
+    const note = parts.filter(Boolean).join(' · ');
     if (note) {
       noteEl.textContent = note;
       noteEl.classList.remove('hidden');
@@ -1187,19 +1488,32 @@ async function showExtractedData(file) {
 
   let extracted = null;
   let sourceNote = null;
+  const syncAvailable = window.VencelySync?.isSyncEnabled?.() && navigator.onLine;
 
-  if (file && window.VencelySync?.extractInvoiceFromFile) {
-    extracted = await window.VencelySync.extractInvoiceFromFile(file, selectedCountry);
+  if (file && syncAvailable && window.VencelySync?.extractInvoiceFromFile) {
+    const result = await window.VencelySync.extractInvoiceFromFile(file, selectedCountry);
+    extracted = result?.extracted || result;
     if (extracted?.source === 'mock') {
       sourceNote = extracted.note;
     } else if (extracted) {
       sourceNote = 'Datos extraídos por el servicio en la nube. Revisa antes de guardar.';
     }
+  } else if (file && !navigator.onLine) {
+    sourceNote = 'Sin conexión. Conecta a internet para extraer datos reales de la factura.';
+  } else if (file && !window.VencelySync?.isSyncEnabled?.()) {
+    sourceNote = 'API no configurada. Configura sync-config.js o usa Docker/LAN para extracción automática.';
   }
 
   if (!extracted) {
-    extracted = simulatePhotoExtraction();
-    sourceNote = 'Modo local: el API no está disponible. Datos simulados.';
+    if (!syncAvailable) {
+      extracted = simulatePhotoExtraction();
+      if (!sourceNote) {
+        sourceNote = 'Modo local: extracción simulada. Conecta el API para OCR real.';
+      }
+    } else {
+      extracted = simulatePhotoExtraction();
+      sourceNote = sourceNote || 'El API no respondió. Datos simulados — revisa manualmente.';
+    }
   }
 
   setPhotoExtracting(false);
@@ -1318,10 +1632,46 @@ function attachSettingsListeners() {
   }
 }
 
-document.querySelectorAll('[data-page]').forEach((el) => {
-  el.addEventListener('click', () => {
-    if (el.dataset.page) switchPage(el.dataset.page);
-  });
+document.getElementById('btnSaveProfileName')?.addEventListener('click', () => {
+  const name = document.getElementById('profileNameInput')?.value?.trim() || '';
+  if (typeof updateUserName !== 'function') return;
+  const result = updateUserName(name);
+  if (result.ok) {
+    showToast('✓ Nombre actualizado');
+    renderProfilePage();
+  } else {
+    showToast(result.error || 'No se pudo guardar el nombre.');
+  }
+});
+
+document.getElementById('btnSaveProfilePhone')?.addEventListener('click', () => {
+  const phone = document.getElementById('profilePhoneInput')?.value?.trim() || '';
+  if (typeof updateUserPhone !== 'function') return;
+  const result = updateUserPhone(phone);
+  if (result.ok) {
+    showToast(`✓ Celular guardado: ${formatPhoneDisplay(result.phone)}`);
+    renderProfilePage();
+  } else {
+    showToast(result.error || 'No se pudo guardar el celular.');
+  }
+});
+
+document.getElementById('profilePhoneInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('btnSaveProfilePhone')?.click();
+  }
+});
+
+document.getElementById('profileNameInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('btnSaveProfileName')?.click();
+  }
+});
+
+document.getElementById('btnProfileLogout')?.addEventListener('click', () => {
+  if (typeof logout === 'function') logout();
 });
 
 document.querySelectorAll('[data-modal]').forEach((btn) => {
@@ -1461,9 +1811,11 @@ photoDropzone.addEventListener('drop', (e) => {
 });
 
 document.getElementById('photoConfirm').addEventListener('click', () => {
+  const title = document.getElementById('photoTitle')?.value?.trim();
   const provider = document.getElementById('photoProvider').value;
   const amount = document.getElementById('photoAmount').value;
   const dueDate = document.getElementById('photoDueDate').value;
+  const invoiceNumber = document.getElementById('photoInvoiceNumber')?.value?.trim();
 
   const reminders = [];
   if (settings.whatsapp) reminders.push('WhatsApp');
@@ -1477,7 +1829,7 @@ document.getElementById('photoConfirm').addEventListener('click', () => {
   const category = document.getElementById('photoCategory')?.value || 'servicios';
 
   addAccount({
-    title: provider,
+    title: title || provider,
     provider,
     amount,
     dueDate,
@@ -1487,6 +1839,7 @@ document.getElementById('photoConfirm').addEventListener('click', () => {
     reminders: reminders.length ? reminders : ['Chat'],
     context: 'hogar',
     sedeId: photoSede?.value || (selectedSedeFilter !== 'all' ? selectedSedeFilter : getDefaultSedeId()),
+    notes: invoiceNumber ? `Factura: ${invoiceNumber}` : '',
   });
 
   resetPhotoModal();
@@ -1535,6 +1888,20 @@ categoryChips.forEach((chip) => {
     const activeTab = document.querySelector('.tab-button.active').dataset.filter;
     renderAccounts(activeTab, accountSearch.value);
   });
+});
+
+calendarGrid.addEventListener('click', (e) => {
+  const eventEl = e.target.closest('.calendar-event[data-account-id]');
+  if (!eventEl) return;
+  handleCalendarEventActivate(eventEl);
+});
+
+calendarGrid.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const eventEl = e.target.closest('.calendar-event[data-account-id]');
+  if (!eventEl) return;
+  e.preventDefault();
+  handleCalendarEventActivate(eventEl);
 });
 
 document.getElementById('prevMonth').addEventListener('click', () => {
@@ -1593,12 +1960,24 @@ function bootstrapApp() {
   registerServiceWorker();
   if (typeof updateUserProfileUI === 'function') updateUserProfileUI();
   window.VencelySync?.initSync?.();
-  window.VencelySync?.onLoginSync?.();
 }
 
 window.onAuthSuccess = bootstrapApp;
+window.renderProfilePage = renderProfilePage;
+window.getUserPlanLabel = getUserPlanLabel;
+
+function initAppRouting() {
+  normalizeAppPathRoute();
+  window.addEventListener('hashchange', handleAppHashRoute);
+  const pageFromHash = getPageFromHash();
+  if (pageFromHash !== 'dashboard') {
+    switchPage(pageFromHash, { updateHash: false });
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
+  attachNavigationListeners();
+  initAppRouting();
   if (typeof getCurrentUser === 'function' && getCurrentUser()) {
     bootstrapApp();
   }

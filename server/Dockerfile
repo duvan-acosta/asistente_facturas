@@ -1,5 +1,7 @@
 FROM node:20-alpine
 
+RUN apk add --no-cache wget fontconfig ttf-dejavu
+
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -10,7 +12,13 @@ COPY .env.example ./.env.example
 
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV DATA_DIR=/app/server/data
+ENV UPLOADS_DIR=/app/server/uploads
+
+RUN mkdir -p /app/server/uploads && \
+    addgroup -S vencely && adduser -S vencely -G vencely && \
+    chown -R vencely:vencely /app
+
+USER vencely
 
 EXPOSE 3000
 

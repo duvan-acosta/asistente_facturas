@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const esbuild = require('esbuild');
+const { resolveSyncApiUrl, writeSyncConfig } = require('./inject-sync-config');
 
 const root = path.join(__dirname, '..');
 const dest = path.join(root, 'www');
@@ -10,6 +12,7 @@ const files = [
   'app.js',
   'auth.js',
   'sync.js',
+  'admin.js',
   'manifest.json',
   'sw.js',
   'auth-config.example.js',
@@ -51,16 +54,28 @@ if (fs.existsSync(authConfig)) {
   copyFile(authConfig, path.join(dest, 'auth-config.js'));
 }
 
-const syncConfig = path.join(root, 'sync-config.js');
-if (fs.existsSync(syncConfig)) {
-  copyFile(syncConfig, path.join(dest, 'sync-config.js'));
-}
+const apiUrl = resolveSyncApiUrl(root);
+writeSyncConfig(path.join(dest, 'sync-config.js'), apiUrl, 'copy-web.js');
 
 for (const dir of dirs) {
   const src = path.join(root, dir);
   if (fs.existsSync(src)) {
     copyDir(src, path.join(dest, dir));
   }
+}
+
+const capacitorAuthEntry = path.join(root, 'scripts', 'capacitor-auth-entry.js');
+if (fs.existsSync(capacitorAuthEntry)) {
+  esbuild.buildSync({
+    entryPoints: [capacitorAuthEntry],
+    bundle: true,
+    outfile: path.join(dest, 'capacitor-auth.js'),
+    format: 'iife',
+    platform: 'browser',
+    target: ['es2020'],
+    minify: false,
+  });
+  console.log('Bundled capacitor-auth.js');
 }
 
 console.log('Web assets copied to www/');

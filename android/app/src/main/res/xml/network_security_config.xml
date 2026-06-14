@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Permite HTTP (cleartext) solo para desarrollo local/LAN.
+  En producción usa HTTPS en CLOUD_API_URL (sync-config.js).
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- LAN dev: añade tu IP WiFi si quieres restringir cleartext (base-config ya permite HTTP en dev) -->
+        <domain includeSubdomains="true">192.168.18.20</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

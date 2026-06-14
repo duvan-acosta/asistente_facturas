@@ -9,4 +9,5 @@ package-lock.json
 auth-config.js
 sync-config.js
 server/data/
+server/uploads/
 www/

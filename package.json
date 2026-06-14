@@ -1,29 +1,46 @@
-{
-  "name": "asistente-facturas",
-  "version": "1.0.0",
-  "description": "Vencely — asistente de cuentas por pagar, hogar y empresa",
-  "scripts": {
-    "start": "serve . -l 8080",
-    "server": "node server/index.js",
-    "dev": "concurrently -k -n web,api -c blue,green \"npm run start\" \"npm run server\"",
-    "copy:web": "node scripts/copy-web.js",
-    "cap:init": "npx cap init Vencely com.vencely.app --web-dir www",
-    "cap:add:android": "npx cap add android",
-    "cap:sync": "npm run copy:web && npx cap sync",
-    "cap:open:android": "npx cap open android",
-    "build:apk": "npm run cap:sync && cd android && gradlew.bat assembleDebug"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "multer": "^1.4.5-lts.1"
-  },
-  "devDependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/cli": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "concurrently": "^9.1.2",
-    "serve": "^14.2.4"
-  }
-}
+{
+  "name": "asistente-facturas",
+  "version": "1.0.0",
+  "description": "Vencely — asistente de cuentas por pagar, hogar y empresa",
+  "scripts": {
+    "prestart": "node scripts/ensure-config.js",
+    "start": "serve -s . -l 8080",
+    "predev": "node scripts/ensure-config.js",
+    "server": "node server/index.js",
+    "seed": "node scripts/seed-dev-data.js",
+    "test:invoice": "node scripts/test-invoice-extract.js",
+    "migrate:json": "node scripts/migrate-json-to-pg.js",
+    "dev": "concurrently -k -n web,api -c blue,green \"npm run start\" \"npm run server\"",
+    "copy:web": "node scripts/ensure-config.js && node scripts/copy-web.js",
+    "cap:init": "npx cap init Vencely com.vencely.app --web-dir www",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npm run copy:web && npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "build:apk": "node scripts/build-mobile.js",
+    "build:mobile": "node scripts/build-mobile.js",
+    "setup:lan": "powershell -ExecutionPolicy Bypass -File scripts/setup-lan.ps1"
+  },
+  "dependencies": {
+    "@capgo/capacitor-social-login": "^7.20.0",
+    "@google/generative-ai": "^0.24.1",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^8.2.0",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.13.1",
+    "sharp": "^0.33.5",
+    "tesseract.js": "^5.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "concurrently": "^9.1.2",
+    "esbuild": "^0.28.1",
+    "serve": "^14.2.4"
+  }
+}

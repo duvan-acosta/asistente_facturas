@@ -1,31 +1,142 @@
 services:
-  api:
-    build:
-      context: .
-      dockerfile: server/Dockerfile
-    container_name: vencely-api
-    ports:
-      - "3000:3000"
+
+  postgres:
+
+    image: postgres:16-alpine
+
+    container_name: vencely-postgres
+
     environment:
-      - PORT=3000
-      - CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
-      - DATA_DIR=/app/server/data
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      - INVOICE_API_URL=${INVOICE_API_URL:-}
-      - INVOICE_API_KEY=${INVOICE_API_KEY:-}
+
+      POSTGRES_USER: ${POSTGRES_USER:-vencely}
+
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vencely}
+
+      POSTGRES_DB: ${POSTGRES_DB:-vencely}
+
     volumes:
-      - vencely-data:/app/server/data
+
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vencely} -d ${POSTGRES_DB:-vencely}"]
+
+      interval: 5s
+
+      timeout: 5s
+
+      retries: 10
+
+      start_period: 10s
+
     restart: unless-stopped
+
+
+
+  api:
+
+    build:
+
+      context: .
+
+      dockerfile: server/Dockerfile
+
+    container_name: vencely-api
+
+    ports:
+
+      - "3000:3000"
+
+    env_file:
+
+      - path: .env
+
+        required: false
+
+    environment:
+
+      - NODE_ENV=${NODE_ENV:-development}
+
+      - PORT=3000
+
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-vencely}:${POSTGRES_PASSWORD:-vencely}@postgres:5432/${POSTGRES_DB:-vencely}
+
+      - UPLOADS_DIR=/app/server/uploads
+
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,https://localhost,capacitor://localhost,http://localhost}
+
+      - JWT_SECRET=${JWT_SECRET:?Define JWT_SECRET en .env}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET:?Define ADMIN_JWT_SECRET en .env}
+      - INVOICE_PROVIDER=${INVOICE_PROVIDER:-auto}
+
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash}
+
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+
+      - INVOICE_API_URL=${INVOICE_API_URL:-}
+
+      - INVOICE_API_KEY=${INVOICE_API_KEY:-}
+
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@vencely.app}
+
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?Define ADMIN_PASSWORD en .env}
+
+      - SEED_DEMO=${SEED_DEMO:-false}
+
+    volumes:
+
+      - invoice_uploads:/app/server/uploads
+
+    depends_on:
+
+      postgres:
+
+        condition: service_healthy
+
+    healthcheck:
+
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+
+      interval: 10s
+
+      timeout: 5s
+
+      retries: 8
+
+      start_period: 30s
+
+    restart: unless-stopped
+
+
 
   web:
+
     build: .
+
     container_name: vencely
+
     ports:
+
       - "8080:80"
+
     depends_on:
-      - api
+
+      api:
+
+        condition: service_healthy
+
     restart: unless-stopped
 
+
+
 volumes:
-  vencely-data:
+
+  postgres_data:
+
+  invoice_uploads:
+
