@@ -11,16 +11,65 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-let accounts = [
-  { id: '1', title: 'Luz Hogar', provider: 'Enel', amount: 85.0, dueDate: '2026-06-14', type: 'Recurrente', category: 'servicios', status: 'por-vencer', reminders: ['WhatsApp', 'Correo'], icon: '⚡', context: 'hogar' },
-  { id: '2', title: 'Visa Platinum', provider: 'Banco Empresa', amount: 950.0, dueDate: '2026-06-15', type: 'Puntual', category: 'tarjeta', status: 'pendiente', reminders: ['WhatsApp'], icon: '💳', context: 'empresa' },
-  { id: '3', title: 'Internet & TV', provider: 'Claro', amount: 45.5, dueDate: '2026-06-17', type: 'Recurrente', category: 'telefonia', status: 'pendiente', reminders: ['Correo'], icon: '📶', context: 'hogar' },
-  { id: '4', title: 'Agua Potable', provider: 'Aguas de la Ciudad', amount: 32.8, dueDate: '2026-06-10', type: 'Recurrente', category: 'servicios', status: 'vencido', reminders: ['WhatsApp', 'Chat'], icon: '💧', context: 'hogar' },
-  { id: '5', title: 'Crédito Vehículo', provider: 'Banco del Sur', amount: 420.0, dueDate: '2026-06-20', type: 'Recurrente', category: 'credito', status: 'programado', reminders: ['Correo'], icon: '🚗', context: 'hogar' },
-  { id: '6', title: 'Tarjeta Pyme', provider: 'Banco Empresarial', amount: 350.0, dueDate: '2026-06-22', type: 'Puntual', category: 'tarjeta', status: 'pendiente', reminders: ['Chat'], icon: '🏦', context: 'empresa' },
-  { id: '7', title: 'Gas Natural', provider: 'GasSur', amount: 60.0, dueDate: '2026-06-18', type: 'Recurrente', category: 'servicios', status: 'pendiente', reminders: ['WhatsApp'], icon: '🔥', context: 'hogar' },
-  { id: '8', title: 'Seguro Hogar', provider: 'Segura', amount: 68.2, dueDate: '2026-06-25', type: 'Puntual', category: 'otro', status: 'programado', reminders: ['Correo', 'Chat'], icon: '🛡️', context: 'hogar' },
+const STORAGE_KEYS = {
+  sedes: 'asistente_facturas_sedes',
+  accounts: 'asistente_facturas_accounts',
+  selectedSede: 'asistente_facturas_selected_sede',
+  country: 'asistente_facturas_country',
+};
+
+const COUNTRY_CONFIG = {
+  CO: {
+    id: 'CO',
+    name: 'Colombia',
+    flag: '🇨🇴',
+    locale: 'es-CO',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  },
+  MX: {
+    id: 'MX',
+    name: 'México',
+    flag: '🇲🇽',
+    locale: 'es-MX',
+    currency: 'MXN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  },
+  US: {
+    id: 'US',
+    name: 'Estados Unidos',
+    flag: '🇺🇸',
+    locale: 'en-US',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  },
+};
+
+const DEFAULT_COUNTRY = 'CO';
+
+const DEFAULT_SEDES = [
+  { id: 's1', name: 'Casa principal', icon: '🏠' },
+  { id: 's2', name: 'Oficina', icon: '🏢' },
 ];
+
+const SAMPLE_ACCOUNTS = [
+  { id: '1', title: 'Luz Hogar', provider: 'Enel', amount: 85000, dueDate: '2026-06-14', type: 'Recurrente', category: 'servicios', status: 'por-vencer', reminders: ['WhatsApp', 'Correo'], icon: '⚡', context: 'hogar', sedeId: 's1' },
+  { id: '2', title: 'Visa Platinum', provider: 'Banco Empresa', amount: 950000, dueDate: '2026-06-15', type: 'Puntual', category: 'tarjeta', status: 'pendiente', reminders: ['WhatsApp'], icon: '💳', context: 'empresa', sedeId: 's2' },
+  { id: '3', title: 'Internet & TV', provider: 'Claro', amount: 45500, dueDate: '2026-06-17', type: 'Recurrente', category: 'telefonia', status: 'pendiente', reminders: ['Correo'], icon: '📶', context: 'hogar', sedeId: 's1' },
+  { id: '4', title: 'Agua Potable', provider: 'Aguas de la Ciudad', amount: 32800, dueDate: '2026-06-10', type: 'Recurrente', category: 'servicios', status: 'vencido', reminders: ['WhatsApp', 'Chat'], icon: '💧', context: 'hogar', sedeId: 's1' },
+  { id: '5', title: 'Crédito Vehículo', provider: 'Banco del Sur', amount: 420000, dueDate: '2026-06-20', type: 'Recurrente', category: 'credito', status: 'programado', reminders: ['Correo'], icon: '🚗', context: 'hogar', sedeId: 's1' },
+  { id: '6', title: 'Tarjeta Pyme', provider: 'Banco Empresarial', amount: 350000, dueDate: '2026-06-22', type: 'Puntual', category: 'tarjeta', status: 'pendiente', reminders: ['Chat'], icon: '🏦', context: 'empresa', sedeId: 's2' },
+  { id: '7', title: 'Gas Natural', provider: 'GasSur', amount: 60000, dueDate: '2026-06-18', type: 'Recurrente', category: 'servicios', status: 'pendiente', reminders: ['WhatsApp'], icon: '🔥', context: 'hogar', sedeId: 's1' },
+  { id: '8', title: 'Seguro Hogar', provider: 'Segura', amount: 68200, dueDate: '2026-06-25', type: 'Puntual', category: 'otro', status: 'programado', reminders: ['Correo', 'Chat'], icon: '🛡️', context: 'hogar', sedeId: 's1' },
+];
+
+let sedes = [...DEFAULT_SEDES];
+let accounts = [...SAMPLE_ACCOUNTS];
+let selectedSedeFilter = 'all';
+let selectedCountry = DEFAULT_COUNTRY;
 
 const settings = {
   whatsapp: true,
@@ -36,6 +85,7 @@ let calendarMonth = 5;
 let calendarYear = 2026;
 let activeCategoryFilter = 'all';
 let photoFile = null;
+let uploadMode = 'photo';
 
 const pages = document.querySelectorAll('.page');
 const navLinks = document.querySelectorAll('.nav-link, .bottom-nav-item[data-page]');
@@ -54,10 +104,13 @@ const calendarTitle = document.getElementById('calendarTitle');
 const toggleWhatsapp = document.getElementById('toggleWhatsapp');
 const toggleEmail = document.getElementById('toggleEmail');
 const toggleChat = document.getElementById('toggleChat');
+const whatsappPhoneInput = document.getElementById('whatsappPhoneInput');
+const btnSaveWhatsappPhone = document.getElementById('btnSaveWhatsappPhone');
 const firstAlert = document.getElementById('firstAlert');
 const finalAlert = document.getElementById('finalAlert');
 const sendHour = document.getElementById('sendHour');
 const repeatIfNotPaid = document.getElementById('repeatIfNotPaid');
+const countrySelect = document.getElementById('countrySelect');
 const reminderStatus = document.getElementById('reminderStatus');
 const activeReminderChips = document.getElementById('activeReminderChips');
 
@@ -65,7 +118,15 @@ const modals = {
   manual: document.getElementById('modalManual'),
   photo: document.getElementById('modalPhoto'),
   bot: document.getElementById('modalBot'),
+  sede: document.getElementById('modalSede'),
 };
+
+const sedeSwitcher = document.getElementById('sedeSwitcher');
+const sedeCardSwitcher = document.getElementById('sedeCardSwitcher');
+const sedeCardActive = document.getElementById('sedeCardActive');
+const sedesList = document.getElementById('sedesList');
+const sedeForm = document.getElementById('sedeForm');
+const dashboardSedeNote = document.getElementById('dashboardSedeNote');
 
 const registerSheet = document.getElementById('registerSheet');
 const manualForm = document.getElementById('manualForm');
@@ -73,6 +134,360 @@ const toast = document.getElementById('toast');
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function getDefaultSedeId() {
+  return sedes[0]?.id || 's1';
+}
+
+function getSedeById(id) {
+  return sedes.find((s) => s.id === id);
+}
+
+function getSedeLabel(id) {
+  const sede = getSedeById(id);
+  return sede ? `${sede.icon} ${sede.name}` : 'Sin sede';
+}
+
+function matchesSedeFilter(account) {
+  return selectedSedeFilter === 'all' || account.sedeId === selectedSedeFilter;
+}
+
+function getFilteredAccounts() {
+  return accounts.filter(matchesSedeFilter);
+}
+
+function touchUpdatedAt(item) {
+  return { ...item, updatedAt: new Date().toISOString() };
+}
+
+function saveSedes(options = {}) {
+  try {
+    sedes = sedes.map((s) => (s.updatedAt ? s : touchUpdatedAt(s)));
+    localStorage.setItem(STORAGE_KEYS.sedes, JSON.stringify(sedes));
+    if (!options.skipSync && window.VencelySync?.isSyncEnabled?.()) {
+      window.VencelySync.performSync({ silent: true });
+    }
+  } catch (e) {
+    console.warn('No se pudieron guardar las sedes:', e);
+  }
+}
+
+function saveAccounts(options = {}) {
+  try {
+    accounts = accounts.map((a) => (a.updatedAt ? a : touchUpdatedAt(a)));
+    localStorage.setItem(STORAGE_KEYS.accounts, JSON.stringify(accounts));
+    if (!options.skipSync && window.VencelySync?.isSyncEnabled?.()) {
+      window.VencelySync.performSync({ silent: true });
+    }
+  } catch (e) {
+    console.warn('No se pudieron guardar las cuentas:', e);
+  }
+}
+
+function saveSelectedSede() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.selectedSede, selectedSedeFilter);
+  } catch (e) {
+    console.warn('No se pudo guardar el filtro de sede:', e);
+  }
+}
+
+function saveCountry() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.country, selectedCountry);
+  } catch (e) {
+    console.warn('No se pudo guardar el país:', e);
+  }
+}
+
+function getCountryConfig(countryId = selectedCountry) {
+  return COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG[DEFAULT_COUNTRY];
+}
+
+function getCurrencyCode() {
+  return getCountryConfig().currency;
+}
+
+function formatCurrency(value, countryId = selectedCountry) {
+  const config = getCountryConfig(countryId);
+  return new Intl.NumberFormat(config.locale, {
+    style: 'currency',
+    currency: config.currency,
+    minimumFractionDigits: config.minimumFractionDigits,
+    maximumFractionDigits: config.maximumFractionDigits,
+  }).format(Number(value));
+}
+
+function updateCurrencyLabels() {
+  const config = getCountryConfig();
+  const code = config.currency;
+
+  document.querySelectorAll('[data-currency-label]').forEach((el) => {
+    el.textContent = code;
+  });
+
+  const manualAmountLabel = document.getElementById('manualAmountLabel');
+  if (manualAmountLabel) manualAmountLabel.textContent = `Monto (${code})`;
+
+  document.querySelectorAll('[name="amount"], #photoAmount').forEach((input) => {
+    const useDecimals = config.maximumFractionDigits > 0;
+    input.step = useDecimals ? '0.01' : '1';
+    input.placeholder = useDecimals ? '0.00' : '0';
+  });
+
+  updateChatCurrencyExamples();
+}
+
+function getChatCurrencyExamples() {
+  const examples = {
+    CO: {
+      luz: { amount: 85000, label: 'Luz Enel $85.000' },
+      tarjeta: { amount: 200000, label: 'Tarjeta Visa' },
+      credito: { amount: 420000, label: 'Crédito auto' },
+      placeholder: 'Ej: Agregar internet Claro $45.500, vence el 17...',
+      botIntro: '¡Hola! Soy tu asistente de cuentas por pagar. Cuéntame el pago que quieres registrar, por ejemplo: "Agregar luz Enel $85.000, vence el 15 de junio".',
+      amountHint: 'No detecté el monto. ¿Puedes incluir el valor? Ej: "$85.000" o "85000 pesos".',
+    },
+    MX: {
+      luz: { amount: 850, label: 'Luz CFE $850' },
+      tarjeta: { amount: 2000, label: 'Tarjeta Visa' },
+      credito: { amount: 4200, label: 'Crédito auto' },
+      placeholder: 'Ej: Agregar internet Telmex $599, vence el 17...',
+      botIntro: '¡Hola! Soy tu asistente de cuentas por pagar. Cuéntame el pago que quieres registrar, por ejemplo: "Agregar luz CFE $850, vence el 15 de junio".',
+      amountHint: 'No detecté el monto. ¿Puedes incluir el valor? Ej: "$850" o "850 pesos".',
+    },
+    US: {
+      luz: { amount: 85, label: 'Luz $85' },
+      tarjeta: { amount: 200, label: 'Tarjeta Visa' },
+      credito: { amount: 420, label: 'Crédito auto' },
+      placeholder: 'Ej: Agregar internet Comcast $45, vence el 17...',
+      botIntro: '¡Hola! Soy tu asistente de cuentas por pagar. Cuéntame el pago que quieres registrar, por ejemplo: "Agregar luz $85, vence el 15 de junio".',
+      amountHint: 'No detecté el monto. ¿Puedes incluir el valor? Ej: "$85" o "85 dólares".',
+    },
+  };
+  return examples[selectedCountry] || examples[DEFAULT_COUNTRY];
+}
+
+function updateChatCurrencyExamples() {
+  const ex = getChatCurrencyExamples();
+  const chatInput = document.getElementById('chatInput');
+  if (chatInput) chatInput.placeholder = ex.placeholder;
+
+  const chips = document.querySelectorAll('.suggestion-chip');
+  if (chips.length >= 3) {
+    chips[0].dataset.suggestion = `Registrar luz Enel $${ex.luz.amount.toLocaleString('es')} vence el 15 de junio`;
+    chips[0].textContent = ex.luz.label;
+    chips[1].dataset.suggestion = `Agregar tarjeta Visa del banco, pago mínimo $${ex.tarjeta.amount} el día 20`;
+    chips[1].textContent = ex.tarjeta.label;
+    chips[2].dataset.suggestion = `Crédito vehículo banco, cuota mensual $${ex.credito.amount}`;
+    chips[2].textContent = ex.credito.label;
+  }
+}
+
+function populateCountrySelect() {
+  if (!countrySelect) return;
+  countrySelect.innerHTML = Object.values(COUNTRY_CONFIG)
+    .map((c) => `<option value="${c.id}">${c.flag} ${c.name} (${c.currency})</option>`)
+    .join('');
+  countrySelect.value = selectedCountry;
+}
+
+function loadFromStorage() {
+  try {
+    const storedSedes = localStorage.getItem(STORAGE_KEYS.sedes);
+    if (storedSedes) sedes = JSON.parse(storedSedes);
+
+    const storedAccounts = localStorage.getItem(STORAGE_KEYS.accounts);
+    if (storedAccounts) {
+      accounts = JSON.parse(storedAccounts);
+      accounts.forEach((a) => {
+        if (!a.sedeId) a.sedeId = a.context === 'empresa' ? 's2' : getDefaultSedeId();
+        if (!getSedeById(a.sedeId)) a.sedeId = getDefaultSedeId();
+      });
+    }
+
+    const storedFilter = localStorage.getItem(STORAGE_KEYS.selectedSede);
+    if (storedFilter) selectedSedeFilter = storedFilter;
+
+    const storedCountry = localStorage.getItem(STORAGE_KEYS.country);
+    if (storedCountry && COUNTRY_CONFIG[storedCountry]) selectedCountry = storedCountry;
+  } catch (e) {
+    console.warn('Error al cargar datos guardados:', e);
+  }
+}
+
+function populateSedeSelects() {
+  const defaultId = getDefaultSedeId();
+  document.querySelectorAll('select[name="sedeId"], #photoSede').forEach((select) => {
+    const current = select.value;
+    select.innerHTML = sedes
+      .map((s) => `<option value="${s.id}">${s.icon} ${s.name}</option>`)
+      .join('');
+    select.value = sedes.some((s) => s.id === current) ? current : defaultId;
+  });
+}
+
+function getSedeFilterLabel() {
+  return selectedSedeFilter === 'all' ? 'Todas las sedes' : getSedeLabel(selectedSedeFilter);
+}
+
+function bindSedeChips(container) {
+  container.querySelectorAll('.sede-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      selectedSedeFilter = chip.dataset.sede;
+      saveSelectedSede();
+      renderSedeSwitcher();
+      refreshAll();
+    });
+  });
+}
+
+function renderSedeSwitcher() {
+  const chipsHtml = [
+    `<button type="button" class="sede-chip${selectedSedeFilter === 'all' ? ' active' : ''}" data-sede="all">Todas las sedes</button>`,
+    ...sedes.map(
+      (s) =>
+        `<button type="button" class="sede-chip${selectedSedeFilter === s.id ? ' active' : ''}" data-sede="${s.id}">${s.icon} ${s.name}</button>`
+    ),
+  ].join('');
+
+  [sedeSwitcher, sedeCardSwitcher].forEach((container) => {
+    if (!container) return;
+    container.innerHTML = chipsHtml;
+    bindSedeChips(container);
+  });
+
+  if (sedeCardActive) {
+    sedeCardActive.textContent = getSedeFilterLabel();
+  }
+}
+
+function renderSedesManager() {
+  if (!sedesList) return;
+
+  sedesList.innerHTML = '';
+
+  sedes.forEach((sede) => {
+    const usedCount = accounts.filter((a) => a.sedeId === sede.id).length;
+    const row = document.createElement('div');
+    row.className = 'sede-row';
+    row.innerHTML = `
+      <div class="sede-row-info">
+        <span class="sede-row-icon">${sede.icon}</span>
+        <div>
+          <p class="sede-row-name">${sede.name}</p>
+          <p class="sede-row-meta">${usedCount} cuenta${usedCount !== 1 ? 's' : ''}</p>
+        </div>
+      </div>
+      <div class="sede-row-actions">
+        <button type="button" class="ghost-button sede-edit-btn" data-sede-id="${sede.id}">Editar</button>
+        <button type="button" class="ghost-button sede-delete-btn" data-sede-id="${sede.id}"${sedes.length <= 1 ? ' disabled' : ''}>Eliminar</button>
+      </div>
+    `;
+    sedesList.appendChild(row);
+  });
+
+  sedesList.querySelectorAll('.sede-edit-btn').forEach((btn) => {
+    btn.addEventListener('click', () => openSedeModal(btn.dataset.sedeId));
+  });
+
+  sedesList.querySelectorAll('.sede-delete-btn').forEach((btn) => {
+    btn.addEventListener('click', () => deleteSede(btn.dataset.sedeId));
+  });
+}
+
+function openSedeModal(sedeId = null) {
+  if (!modals.sede || !sedeForm) return;
+
+  sedeForm.reset();
+  sedeForm.querySelector('[name="sedeId"]').value = sedeId || '';
+  document.getElementById('sedeModalTitle').textContent = sedeId ? 'Editar sede' : 'Nueva sede';
+
+  if (sedeId) {
+    const sede = getSedeById(sedeId);
+    if (sede) {
+      sedeForm.querySelector('[name="name"]').value = sede.name;
+      sedeForm.querySelector('[name="icon"]').value = sede.icon;
+    }
+  }
+
+  modals.sede.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function saveSedeFromForm(e) {
+  e.preventDefault();
+  const fd = new FormData(sedeForm);
+  const existingId = fd.get('sedeId');
+  const name = fd.get('name').trim();
+  const icon = fd.get('icon');
+
+  if (!name) return;
+
+  if (existingId) {
+    const sede = getSedeById(existingId);
+    if (sede) {
+      sede.name = name;
+      sede.icon = icon;
+      sede.updatedAt = new Date().toISOString();
+      showToast(`✓ Sede "${name}" actualizada`);
+    }
+  } else {
+    sedes.push(touchUpdatedAt({ id: generateId(), name, icon }));
+    showToast(`✓ Sede "${name}" creada`);
+  }
+
+  saveSedes();
+  populateSedeSelects();
+  renderSedeSwitcher();
+  renderSedesManager();
+  refreshAll();
+  modals.sede.classList.add('hidden');
+  if (!Object.values(modals).some((m) => m && !m.classList.contains('hidden'))) {
+    document.body.style.overflow = '';
+  }
+}
+
+function deleteSede(sedeId) {
+  if (sedes.length <= 1) {
+    showToast('Debe existir al menos una sede');
+    return;
+  }
+
+  const sede = getSedeById(sedeId);
+  if (!sede) return;
+
+  const fallbackId = sedes.find((s) => s.id !== sedeId)?.id;
+  if (!fallbackId) return;
+
+  if (!confirm(`¿Eliminar "${sede.name}"? Las cuentas asociadas pasarán a otra sede.`)) return;
+
+  const now = new Date().toISOString();
+  accounts.forEach((a) => {
+    if (a.sedeId === sedeId) {
+      a.sedeId = fallbackId;
+      a.updatedAt = now;
+    }
+  });
+
+  sedes = sedes.filter((s) => s.id !== sedeId);
+  if (selectedSedeFilter === sedeId) selectedSedeFilter = 'all';
+
+  saveSedes();
+  saveAccounts();
+  saveSelectedSede();
+  populateSedeSelects();
+  renderSedeSwitcher();
+  renderSedesManager();
+  refreshAll();
+  showToast(`Sede "${sede.name}" eliminada`);
+}
+
+function sedeBadgeHtml(sedeId) {
+  const sede = getSedeById(sedeId);
+  if (!sede) return '';
+  return `<span class="sede-badge" title="Casa / Sede">${sede.icon} ${sede.name}</span>`;
 }
 
 function switchPage(pageId) {
@@ -91,7 +506,7 @@ function showToast(message) {
   showToast._timer = setTimeout(() => toast.classList.add('hidden'), 3200);
 }
 
-function openModal(name) {
+function openModal(name, options = {}) {
   closeRegisterSheet();
   const modal = modals[name];
   if (!modal) return;
@@ -99,17 +514,33 @@ function openModal(name) {
   document.body.style.overflow = 'hidden';
 
   if (name === 'bot') initChat();
+  if (name === 'photo') {
+    uploadMode = options.uploadMode || 'photo';
+    setupUploadModal();
+    resetPhotoModal();
+    populateSedeSelects();
+    const photoSede = document.getElementById('photoSede');
+    if (photoSede && selectedSedeFilter !== 'all') {
+      photoSede.value = selectedSedeFilter;
+    }
+  }
   if (name === 'manual') {
+    populateSedeSelects();
     const dueInput = manualForm.querySelector('[name="dueDate"]');
     if (!dueInput.value) {
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
       dueInput.value = nextWeek.toISOString().slice(0, 10);
     }
+    const sedeSelect = manualForm.querySelector('[name="sedeId"]');
+    if (sedeSelect && selectedSedeFilter !== 'all') {
+      sedeSelect.value = selectedSedeFilter;
+    }
   }
 }
 
 function closeAllModals() {
+  closeCameraPreview();
   Object.values(modals).forEach((modal) => modal.classList.add('hidden'));
   document.body.style.overflow = '';
 }
@@ -128,10 +559,6 @@ function closeRegisterSheet() {
   if (!Object.values(modals).some((m) => !m.classList.contains('hidden'))) {
     document.body.style.overflow = '';
   }
-}
-
-function formatCurrency(value) {
-  return `US$ ${Number(value).toFixed(2)}`;
 }
 
 function computeStatus(dueDate) {
@@ -178,6 +605,7 @@ function refreshAll() {
   accounts.forEach((a) => {
     if (a.status !== 'pagado') a.status = computeStatus(a.dueDate);
   });
+  renderSedeSwitcher();
   renderDashboard();
   const activeTab = document.querySelector('.tab-button.active')?.dataset.filter || 'all';
   renderAccounts(activeTab, accountSearch.value);
@@ -186,7 +614,8 @@ function refreshAll() {
 }
 
 function renderDashboard() {
-  const pending = accounts.filter((a) => a.status !== 'pagado');
+  const filtered = getFilteredAccounts();
+  const pending = filtered.filter((a) => a.status !== 'pagado');
   const total = pending.reduce((sum, a) => sum + a.amount, 0);
   const sorted = [...pending].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
   const nextDue = sorted.find((a) => new Date(a.dueDate) >= new Date(new Date().toDateString()));
@@ -201,6 +630,11 @@ function renderDashboard() {
     ? `Próximo: ${nextDue.title} · ${formatCurrency(nextDue.amount)}`
     : 'No hay próximos pagos';
   dueCount.textContent = dueInWeek;
+
+  if (dashboardSedeNote) {
+    dashboardSedeNote.textContent =
+      selectedSedeFilter === 'all' ? 'Total de todas las sedes' : `Filtrado: ${getSedeFilterLabel()}`;
+  }
 
   const upcoming = pending
     .filter((a) => ['vencido', 'por-vencer', 'pendiente'].includes(a.status))
@@ -223,7 +657,7 @@ function renderPaymentList(items) {
 
   items.forEach((payment) => {
     const item = document.createElement('li');
-    item.className = 'payment-item';
+    item.className = `payment-item payment-item--${getStatusClass(payment.status)}`;
     item.innerHTML = `
       <div class="payment-item-header">
         <div>
@@ -231,6 +665,7 @@ function renderPaymentList(items) {
           <div class="payment-meta">
             <span>${payment.provider}</span>
             <span class="category-badge">${CATEGORY_LABELS[payment.category] || payment.category}</span>
+            ${sedeBadgeHtml(payment.sedeId)}
             <span>${payment.type}</span>
             <span>Vence: ${payment.dueDate}</span>
           </div>
@@ -247,7 +682,8 @@ function renderPaymentList(items) {
 }
 
 function renderAccounts(filter = 'all', query = '') {
-  const filtered = accounts.filter((account) => {
+  const sedeFiltered = getFilteredAccounts();
+  const filtered = sedeFiltered.filter((account) => {
     const q = query.toLowerCase();
     const matchesQuery =
       account.title.toLowerCase().includes(q) ||
@@ -258,9 +694,9 @@ function renderAccounts(filter = 'all', query = '') {
     return matchesQuery && matchesFilter && matchesCategory;
   });
 
-  const pending = accounts.filter((a) => a.status !== 'pagado');
-  accountCount.textContent = accounts.length;
-  accountTotal.textContent = pending.reduce((sum, a) => sum + a.amount, 0).toFixed(2);
+  const pending = sedeFiltered.filter((a) => a.status !== 'pagado');
+  accountCount.textContent = sedeFiltered.length;
+  accountTotal.textContent = formatCurrency(pending.reduce((sum, a) => sum + a.amount, 0));
   accountCards.innerHTML = '';
 
   if (filtered.length === 0) {
@@ -273,12 +709,13 @@ function renderAccounts(filter = 'all', query = '') {
 
   filtered.forEach((account) => {
     const card = document.createElement('div');
-    card.className = 'account-card';
+    card.className = `account-card payment-item--${getStatusClass(account.status)}`;
     card.innerHTML = `
       <div class="account-card-header">
         <div class="account-detail">
           <span class="account-provider"><span class="account-icon">${account.icon || '📄'}</span>${account.title}</span>
           <p>${account.provider} · ${account.type} · ${CATEGORY_LABELS[account.category] || ''}</p>
+          <div class="account-meta">${sedeBadgeHtml(account.sedeId)}</div>
         </div>
         <span class="status-pill ${getStatusClass(account.status)}">${getStatusLabel(account.status)}</span>
       </div>
@@ -300,7 +737,7 @@ function renderCalendar() {
   const today = new Date();
 
   const eventsByDay = {};
-  accounts.forEach((a) => {
+  getFilteredAccounts().forEach((a) => {
     const d = new Date(a.dueDate + 'T00:00:00');
     if (d.getMonth() === calendarMonth && d.getFullYear() === calendarYear) {
       const day = d.getDate();
@@ -352,7 +789,7 @@ function updateReminderSummary() {
 }
 
 function addAccount(data) {
-  const account = {
+  const account = touchUpdatedAt({
     id: generateId(),
     title: data.title,
     provider: data.provider,
@@ -364,9 +801,11 @@ function addAccount(data) {
     reminders: data.reminders,
     icon: data.icon || '📄',
     context: data.context || 'hogar',
+    sedeId: data.sedeId || getDefaultSedeId(),
     notes: data.notes || '',
-  };
+  });
   accounts.unshift(account);
+  saveAccounts();
   refreshAll();
   showToast(`✓ "${account.title}" registrada correctamente`);
   return account;
@@ -393,8 +832,17 @@ function parseBotMessage(text) {
     type = 'Recurrente';
   }
 
-  const amountMatch = text.match(/\$?\s*(\d+(?:[.,]\d{1,2})?)/);
-  const amount = amountMatch ? parseFloat(amountMatch[1].replace(',', '.')) : 0;
+  const amountMatch = text.match(/\$?\s*([\d.,]+)/);
+  let amount = 0;
+  if (amountMatch) {
+    const raw = amountMatch[1];
+    const config = getCountryConfig();
+    if (config.maximumFractionDigits === 0) {
+      amount = parseInt(raw.replace(/\./g, '').replace(/,/g, ''), 10) || 0;
+    } else {
+      amount = parseFloat(raw.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+  }
 
   const dateMatch = text.match(/(\d{1,2})\s*(?:de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i);
   let dueDate = new Date();
@@ -418,10 +866,7 @@ function initChat() {
   const chatMessages = document.getElementById('chatMessages');
   if (chatMessages.dataset.initialized) return;
   chatMessages.dataset.initialized = 'true';
-  appendChatMessage(
-    'bot',
-    '¡Hola! Soy tu asistente de cuentas por pagar. Cuéntame el pago que quieres registrar, por ejemplo: "Agregar luz Enel $85, vence el 15 de junio".'
-  );
+  appendChatMessage('bot', getChatCurrencyExamples().botIntro);
 }
 
 function appendChatMessage(role, text) {
@@ -440,7 +885,7 @@ function handleChatSubmit(text) {
   setTimeout(() => {
     const parsed = parseBotMessage(text);
     if (!parsed.amount) {
-      appendChatMessage('bot', 'No detecté el monto. ¿Puedes incluir el valor? Ej: "$85" o "85 dólares".');
+      appendChatMessage('bot', getChatCurrencyExamples().amountHint);
       return;
     }
 
@@ -453,6 +898,7 @@ function handleChatSubmit(text) {
       ...parsed,
       reminders: reminders.length ? reminders : ['Chat'],
       context: 'hogar',
+      sedeId: selectedSedeFilter !== 'all' ? selectedSedeFilter : getDefaultSedeId(),
     });
 
     appendChatMessage(
@@ -463,39 +909,348 @@ function handleChatSubmit(text) {
 }
 
 function simulatePhotoExtraction() {
-  const samples = [
-    { provider: 'Enel Colombia', amount: 92.5, dueDate: '2026-06-18' },
-    { provider: 'Claro Colombia', amount: 48.9, dueDate: '2026-06-22' },
-    { provider: 'Bancolombia - Tarjeta', amount: 320.0, dueDate: '2026-06-25' },
-  ];
+  const samplesByCountry = {
+    CO: [
+      { provider: 'Enel Colombia', amount: 92500, dueDate: '2026-06-18', category: 'servicios' },
+      { provider: 'Claro Colombia', amount: 48900, dueDate: '2026-06-22', category: 'telefonia' },
+      { provider: 'Bancolombia - Tarjeta', amount: 320000, dueDate: '2026-06-25', category: 'tarjeta' },
+    ],
+    MX: [
+      { provider: 'CFE', amount: 925.5, dueDate: '2026-06-18', category: 'servicios' },
+      { provider: 'Telmex', amount: 489.9, dueDate: '2026-06-22', category: 'telefonia' },
+      { provider: 'BBVA - Tarjeta', amount: 3200, dueDate: '2026-06-25', category: 'tarjeta' },
+    ],
+    US: [
+      { provider: 'Pacific Gas & Electric', amount: 92.5, dueDate: '2026-06-18', category: 'servicios' },
+      { provider: 'Comcast', amount: 48.9, dueDate: '2026-06-22', category: 'telefonia' },
+      { provider: 'Chase - Tarjeta', amount: 320, dueDate: '2026-06-25', category: 'tarjeta' },
+    ],
+  };
+  const samples = samplesByCountry[selectedCountry] || samplesByCountry[DEFAULT_COUNTRY];
   return samples[Math.floor(Math.random() * samples.length)];
+}
+
+let cameraStream = null;
+
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    || (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024);
+}
+
+function isNativeCapacitor() {
+  return typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform?.();
+}
+
+function dataUrlToFile(dataUrl, filename) {
+  const [header, data] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new File([bytes], filename, { type: mime });
+}
+
+function showPhotoCameraError(message) {
+  const errorEl = document.getElementById('photoCameraError');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+  }
+  showToast(message);
+}
+
+function clearPhotoCameraError() {
+  document.getElementById('photoCameraError')?.classList.add('hidden');
+}
+
+function stopCameraStream() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((track) => track.stop());
+    cameraStream = null;
+  }
+  const video = document.getElementById('cameraVideo');
+  if (video) video.srcObject = null;
+}
+
+function closeCameraPreview() {
+  stopCameraStream();
+  document.getElementById('cameraModal')?.classList.add('hidden');
+  document.getElementById('cameraModalError')?.classList.add('hidden');
+}
+
+function handleCameraAccessError(err, { useCaptureFallback = true } = {}) {
+  const errorName = err?.name || err?.code || '';
+  let message = 'No se pudo acceder a la cámara. Usa la galería como alternativa.';
+
+  if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+    message = 'Permiso de cámara denegado. Usa la galería como alternativa.';
+  } else if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+    message = 'No se encontró ninguna cámara. Usa la galería como alternativa.';
+  }
+
+  showPhotoCameraError(message);
+
+  if (useCaptureFallback && uploadMode === 'photo') {
+    triggerCameraInput();
+  }
+}
+
+async function tryCapacitorCamera() {
+  if (!isNativeCapacitor()) return null;
+
+  const cap = window.Capacitor;
+  const cameraPlugin = cap?.Plugins?.Camera;
+  if (!cameraPlugin?.getPhoto) return null;
+  if (cap.isPluginAvailable && !cap.isPluginAvailable('Camera')) return null;
+
+  const photo = await cameraPlugin.getPhoto({
+    quality: 90,
+    allowEditing: false,
+    resultType: 'dataUrl',
+    source: 'CAMERA',
+    direction: 'REAR',
+  });
+
+  if (!photo?.dataUrl) return null;
+  return dataUrlToFile(photo.dataUrl, `factura-${Date.now()}.jpg`);
+}
+
+async function openCameraPreview() {
+  const modal = document.getElementById('cameraModal');
+  const video = document.getElementById('cameraVideo');
+  const modalError = document.getElementById('cameraModalError');
+
+  if (!modal || !video || !navigator.mediaDevices?.getUserMedia) {
+    throw new Error('unsupported');
+  }
+
+  modalError?.classList.add('hidden');
+  modal.classList.remove('hidden');
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } },
+      audio: false,
+    });
+    video.srcObject = cameraStream;
+    await video.play();
+  } catch (err) {
+    closeCameraPreview();
+    throw err;
+  }
+}
+
+function triggerCameraInput() {
+  const input = document.getElementById('photoInputCamera');
+  if (!input) return;
+  input.value = '';
+  input.click();
+}
+
+function triggerGalleryInput() {
+  const input = document.getElementById('photoInputGallery');
+  if (!input) return;
+  input.value = '';
+  input.click();
+}
+
+function triggerInvoiceInput() {
+  const input = document.getElementById('invoiceInput');
+  if (!input) return;
+  input.value = '';
+  input.click();
+}
+
+async function startTakePhotoFlow() {
+  if (uploadMode !== 'photo') return;
+
+  clearPhotoCameraError();
+
+  if (isNativeCapacitor()) {
+    try {
+      const file = await tryCapacitorCamera();
+      if (file) {
+        handleUploadFile(file);
+        return;
+      }
+    } catch (err) {
+      handleCameraAccessError(err, { useCaptureFallback: true });
+      return;
+    }
+  }
+
+  if (navigator.mediaDevices?.getUserMedia) {
+    try {
+      await openCameraPreview();
+      return;
+    } catch (err) {
+      if (isMobileDevice()) {
+        triggerCameraInput();
+        return;
+      }
+      handleCameraAccessError(err, { useCaptureFallback: false });
+      return;
+    }
+  }
+
+  triggerCameraInput();
+}
+
+function capturePhotoFromPreview() {
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('cameraCanvas');
+  if (!video || !canvas || !video.videoWidth) return;
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+
+  canvas.toBlob((blob) => {
+    if (!blob) {
+      showPhotoCameraError('No se pudo capturar la foto. Intenta de nuevo.');
+      return;
+    }
+    const file = new File([blob], `factura-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    closeCameraPreview();
+    handleUploadFile(file);
+  }, 'image/jpeg', 0.92);
+}
+
+function setupUploadModal() {
+  const isInvoice = uploadMode === 'invoice';
+  const captureActions = document.getElementById('photoCaptureActions');
+
+  document.getElementById('photoModalEyebrow').textContent = isInvoice
+    ? 'Registro por factura'
+    : 'Registro por foto';
+  document.getElementById('photoModalTitle').textContent = isInvoice
+    ? 'Sube tu factura'
+    : 'Escanea tu factura';
+  document.getElementById('photoPlaceholderIcon').textContent = isInvoice ? '📄' : '📷';
+  document.getElementById('photoPlaceholderText').textContent = isInvoice
+    ? 'Arrastra un PDF o imagen, o toca para seleccionar'
+    : 'Arrastra una imagen aquí o usa los botones de abajo';
+  document.getElementById('photoPlaceholderHint').textContent = isInvoice
+    ? 'Formatos: PDF, JPG, PNG y otros formatos de imagen'
+    : 'Soporta facturas de servicios, tarjetas y créditos';
+
+  captureActions?.classList.toggle('hidden', isInvoice);
+  const dropzone = document.getElementById('photoDropzone');
+  dropzone?.classList.toggle('photo-dropzone--invoice', isInvoice);
+  dropzone?.classList.toggle('photo-dropzone--camera', !isInvoice);
+}
+
+function isPdfFile(file) {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+}
+
+function setPhotoExtracting(loading) {
+  const loadingEl = document.getElementById('photoExtracting');
+  const extractedEl = document.getElementById('photoExtracted');
+  const confirmBtn = document.getElementById('photoConfirm');
+
+  if (loadingEl) loadingEl.classList.toggle('hidden', !loading);
+  if (loading) {
+    extractedEl?.classList.add('hidden');
+    if (confirmBtn) confirmBtn.disabled = true;
+  }
+}
+
+function applyExtractedData(extracted, sourceNote) {
+  const categorySelect = document.getElementById('photoCategory');
+  document.getElementById('photoProvider').value = extracted.provider || '';
+  document.getElementById('photoAmount').value = extracted.amount || '';
+  document.getElementById('photoDueDate').value = extracted.dueDate || '';
+  if (categorySelect && extracted.category) {
+    categorySelect.value = extracted.category;
+  }
+
+  const noteEl = document.getElementById('photoExtractNote');
+  if (noteEl) {
+    const note = sourceNote || extracted.note;
+    if (note) {
+      noteEl.textContent = note;
+      noteEl.classList.remove('hidden');
+    } else {
+      noteEl.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('photoExtracted').classList.remove('hidden');
+  document.getElementById('photoConfirm').disabled = false;
+}
+
+async function showExtractedData(file) {
+  setPhotoExtracting(true);
+
+  let extracted = null;
+  let sourceNote = null;
+
+  if (file && window.VencelySync?.extractInvoiceFromFile) {
+    extracted = await window.VencelySync.extractInvoiceFromFile(file, selectedCountry);
+    if (extracted?.source === 'mock') {
+      sourceNote = extracted.note;
+    } else if (extracted) {
+      sourceNote = 'Datos extraídos por el servicio en la nube. Revisa antes de guardar.';
+    }
+  }
+
+  if (!extracted) {
+    extracted = simulatePhotoExtraction();
+    sourceNote = 'Modo local: el API no está disponible. Datos simulados.';
+  }
+
+  setPhotoExtracting(false);
+  applyExtractedData(extracted, sourceNote);
 }
 
 function resetPhotoModal() {
   photoFile = null;
+  closeCameraPreview();
+  clearPhotoCameraError();
   document.getElementById('photoPreview').classList.add('hidden');
+  document.getElementById('pdfPreview').classList.add('hidden');
   document.getElementById('photoPlaceholder').classList.remove('hidden');
   document.getElementById('photoExtracted').classList.add('hidden');
+  document.getElementById('photoExtracting')?.classList.add('hidden');
+  document.getElementById('photoExtractNote')?.classList.add('hidden');
   document.getElementById('photoConfirm').disabled = true;
-  document.getElementById('photoInput').value = '';
+  document.getElementById('photoInputCamera').value = '';
+  document.getElementById('photoInputGallery').value = '';
+  document.getElementById('invoiceInput').value = '';
 }
 
-function handlePhotoFile(file) {
-  if (!file || !file.type.startsWith('image/')) return;
+function handleUploadFile(file) {
+  if (!file) return;
+
+  const isPdf = isPdfFile(file);
+  const isImage = file.type.startsWith('image/');
+  if (!isImage && !isPdf) return;
+  if (uploadMode === 'photo' && !isImage) return;
+
   photoFile = file;
+  const preview = document.getElementById('photoPreview');
+  const pdfPreview = document.getElementById('pdfPreview');
+  const placeholder = document.getElementById('photoPlaceholder');
+
+  if (isPdf) {
+    preview.classList.add('hidden');
+    pdfPreview.classList.remove('hidden');
+    document.getElementById('pdfFileName').textContent = file.name;
+    placeholder.classList.add('hidden');
+    showExtractedData(file);
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = (e) => {
-    const preview = document.getElementById('photoPreview');
     preview.src = e.target.result;
     preview.classList.remove('hidden');
-    document.getElementById('photoPlaceholder').classList.add('hidden');
-
-    const extracted = simulatePhotoExtraction();
-    document.getElementById('photoProvider').value = extracted.provider;
-    document.getElementById('photoAmount').value = extracted.amount;
-    document.getElementById('photoDueDate').value = extracted.dueDate;
-    document.getElementById('photoExtracted').classList.remove('hidden');
-    document.getElementById('photoConfirm').disabled = false;
+    pdfPreview.classList.add('hidden');
+    placeholder.classList.add('hidden');
+    showExtractedData(file);
   };
   reader.readAsDataURL(file);
 }
@@ -508,12 +1263,21 @@ function loadSettings() {
   finalAlert.value = settings.finalAlert;
   sendHour.value = settings.sendHour;
   repeatIfNotPaid.checked = settings.repeatIfNotPaid;
+  populateCountrySelect();
+  updateCurrencyLabels();
 }
 
 function attachSettingsListeners() {
   toggleWhatsapp.addEventListener('change', () => {
     settings.whatsapp = toggleWhatsapp.checked;
     updateReminderSummary();
+    if (settings.whatsapp && typeof getCurrentUser === 'function') {
+      const user = getCurrentUser();
+      if (user && !user.phone) {
+        showToast('Agrega tu celular abajo para recibir recordatorios por WhatsApp.');
+        whatsappPhoneInput?.focus();
+      }
+    }
   });
   toggleEmail.addEventListener('change', () => {
     settings.email = toggleEmail.checked;
@@ -527,6 +1291,31 @@ function attachSettingsListeners() {
   finalAlert.addEventListener('change', () => { settings.finalAlert = finalAlert.value; });
   sendHour.addEventListener('change', () => { settings.sendHour = sendHour.value; });
   repeatIfNotPaid.addEventListener('change', () => { settings.repeatIfNotPaid = repeatIfNotPaid.checked; });
+  btnSaveWhatsappPhone?.addEventListener('click', () => {
+    const phone = whatsappPhoneInput?.value?.trim() || '';
+    if (typeof updateUserPhone !== 'function') return;
+    const result = updateUserPhone(phone);
+    if (result.ok) {
+      showToast(`✓ Celular guardado: ${formatPhoneDisplay(result.phone)}`);
+    } else {
+      showToast(result.error || 'No se pudo guardar el celular.');
+    }
+  });
+  whatsappPhoneInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      btnSaveWhatsappPhone?.click();
+    }
+  });
+  if (countrySelect) {
+    countrySelect.addEventListener('change', () => {
+      selectedCountry = countrySelect.value;
+      saveCountry();
+      updateCurrencyLabels();
+      refreshAll();
+      showToast(`✓ Moneda actualizada a ${getCurrencyCode()}`);
+    });
+  }
 }
 
 document.querySelectorAll('[data-page]').forEach((el) => {
@@ -538,7 +1327,7 @@ document.querySelectorAll('[data-page]').forEach((el) => {
 document.querySelectorAll('[data-modal]').forEach((btn) => {
   btn.addEventListener('click', () => {
     closeRegisterSheet();
-    openModal(btn.dataset.modal);
+    openModal(btn.dataset.modal, { uploadMode: btn.dataset.uploadMode });
   });
 });
 
@@ -565,6 +1354,11 @@ document.querySelectorAll('.new-account').forEach((btn) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    const cameraModal = document.getElementById('cameraModal');
+    if (cameraModal && !cameraModal.classList.contains('hidden')) {
+      closeCameraPreview();
+      return;
+    }
     closeAllModals();
     closeRegisterSheet();
   }
@@ -607,6 +1401,7 @@ manualForm.addEventListener('submit', (e) => {
     category: fd.get('category'),
     icon: fd.get('icon'),
     context: fd.get('context'),
+    sedeId: fd.get('sedeId'),
     notes: fd.get('notes'),
     reminders: reminders.length ? reminders : ['Chat'],
   });
@@ -617,10 +1412,42 @@ manualForm.addEventListener('submit', (e) => {
 });
 
 const photoDropzone = document.getElementById('photoDropzone');
-const photoInput = document.getElementById('photoInput');
+const photoInputCamera = document.getElementById('photoInputCamera');
+const photoInputGallery = document.getElementById('photoInputGallery');
+const invoiceInput = document.getElementById('invoiceInput');
 
-photoDropzone.addEventListener('click', () => photoInput.click());
-photoInput.addEventListener('change', (e) => handlePhotoFile(e.target.files[0]));
+photoDropzone.addEventListener('click', (e) => {
+  if (e.target.closest('.photo-action-btn')) return;
+  if (uploadMode === 'invoice') {
+    triggerInvoiceInput();
+    return;
+  }
+  if (!isMobileDevice()) {
+    triggerGalleryInput();
+  }
+});
+
+photoInputCamera.addEventListener('change', (e) => handleUploadFile(e.target.files[0]));
+photoInputGallery.addEventListener('change', (e) => handleUploadFile(e.target.files[0]));
+invoiceInput.addEventListener('change', (e) => handleUploadFile(e.target.files[0]));
+
+document.getElementById('btnTakePhoto')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  startTakePhotoFlow();
+});
+
+document.getElementById('btnPickGallery')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  clearPhotoCameraError();
+  triggerGalleryInput();
+});
+
+document.getElementById('cameraCapture')?.addEventListener('click', capturePhotoFromPreview);
+document.getElementById('cameraCancel')?.addEventListener('click', closeCameraPreview);
+document.getElementById('cameraModalClose')?.addEventListener('click', closeCameraPreview);
+document.getElementById('cameraModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'cameraModal') closeCameraPreview();
+});
 
 photoDropzone.addEventListener('dragover', (e) => {
   e.preventDefault();
@@ -630,7 +1457,7 @@ photoDropzone.addEventListener('dragleave', () => photoDropzone.classList.remove
 photoDropzone.addEventListener('drop', (e) => {
   e.preventDefault();
   photoDropzone.classList.remove('dragover');
-  handlePhotoFile(e.dataTransfer.files[0]);
+  handleUploadFile(e.dataTransfer.files[0]);
 });
 
 document.getElementById('photoConfirm').addEventListener('click', () => {
@@ -643,16 +1470,23 @@ document.getElementById('photoConfirm').addEventListener('click', () => {
   if (settings.email) reminders.push('Correo');
   if (settings.chat) reminders.push('Chat');
 
+  const isPdf = photoFile && isPdfFile(photoFile);
+
+  const photoSede = document.getElementById('photoSede');
+
+  const category = document.getElementById('photoCategory')?.value || 'servicios';
+
   addAccount({
     title: provider,
     provider,
     amount,
     dueDate,
     type: 'Puntual',
-    category: 'servicios',
-    icon: '📷',
+    category,
+    icon: isPdf ? '📄' : '📷',
     reminders: reminders.length ? reminders : ['Chat'],
     context: 'hogar',
+    sedeId: photoSede?.value || (selectedSedeFilter !== 'all' ? selectedSedeFilter : getDefaultSedeId()),
   });
 
   resetPhotoModal();
@@ -715,6 +1549,57 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   renderCalendar();
 });
 
-loadSettings();
-attachSettingsListeners();
-refreshAll();
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('./sw.js')
+      .catch((err) => console.warn('Service worker no registrado:', err));
+  });
+}
+
+window.VencelyData = {
+  getAccounts: () => accounts,
+  getSedes: () => sedes,
+  setAccounts: (nextAccounts, options = {}) => {
+    accounts = nextAccounts;
+    saveAccounts(options);
+    refreshAll();
+  },
+  setSedes: (nextSedes, options = {}) => {
+    sedes = nextSedes;
+    saveSedes(options);
+    populateSedeSelects();
+    renderSedeSwitcher();
+    renderSedesManager();
+    refreshAll();
+  },
+  onSyncComplete: () => refreshAll(),
+};
+
+function bootstrapApp() {
+  if (bootstrapApp._ran) return;
+  bootstrapApp._ran = true;
+
+  loadFromStorage();
+  loadSettings();
+  attachSettingsListeners();
+  populateSedeSelects();
+  renderSedesManager();
+  if (sedeForm) sedeForm.addEventListener('submit', saveSedeFromForm);
+  document.getElementById('btnAddSede')?.addEventListener('click', () => openSedeModal());
+  refreshAll();
+  registerServiceWorker();
+  if (typeof updateUserProfileUI === 'function') updateUserProfileUI();
+  window.VencelySync?.initSync?.();
+  window.VencelySync?.onLoginSync?.();
+}
+
+window.onAuthSuccess = bootstrapApp;
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof getCurrentUser === 'function' && getCurrentUser()) {
+    bootstrapApp();
+  }
+});

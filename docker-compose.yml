@@ -1,7 +1,31 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: vencely-api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - CORS_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
+      - DATA_DIR=/app/server/data
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - INVOICE_API_URL=${INVOICE_API_URL:-}
+      - INVOICE_API_KEY=${INVOICE_API_KEY:-}
+    volumes:
+      - vencely-data:/app/server/data
+    restart: unless-stopped
+
   web:
     build: .
-    container_name: asistente-facturas
+    container_name: vencely
     ports:
       - "8080:80"
+    depends_on:
+      - api
     restart: unless-stopped
+
+volumes:
+  vencely-data:

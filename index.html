@@ -3,54 +3,175 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b1321" />
+    <meta name="theme-color" content="#0A2342" />
     <meta name="description" content="Control de cuentas por pagar — hogar y empresa" />
-    <title>Vencimiento - Cuentas por Pagar</title>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Vencely" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>Vencely - Cuentas por Pagar</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/icon-512.svg" />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
-    <div class="app-grid">
-      <header class="topbar">
-        <aside class="topbar-column">
-          <div class="brand-block">
-            <span class="brand-title">Vencimiento</span>
-            <span class="brand-subtitle">Cuentas por pagar</span>
+    <!-- Pantalla de autenticación -->
+    <div id="authScreen" class="auth-screen hidden" aria-label="Inicio de sesión">
+      <div class="auth-container">
+        <div class="auth-brand">
+          <svg class="brand-logo brand-logo--auth" viewBox="0 0 260 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="authLogoTitle">
+            <title id="authLogoTitle">Vencely</title>
+            <defs>
+              <linearGradient id="authVg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4FC3F7"/>
+                <stop offset="100%" stop-color="#00E5CC"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="8" width="52" height="52" rx="13" fill="url(#authVg)"/>
+            <polyline points="12,36 24,48 40,22" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="42" cy="18" r="5" fill="#FF6B35"/>
+            <text x="66" y="44" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="700" fill="white" letter-spacing="-1">Vencely</text>
+          </svg>
+          <h1 class="auth-brand-title sr-only">Vencely</h1>
+          <p class="auth-brand-subtitle">Tu guardia de facturas. Nunca más una mora.</p>
+        </div>
+
+        <div class="auth-card">
+          <header class="auth-header">
+            <h2 id="authTitle">Iniciar sesión</h2>
+            <p id="authSubtitle">Accede para gestionar tus cuentas por pagar</p>
+          </header>
+
+          <div id="authError" class="auth-error hidden" role="alert"></div>
+
+          <form id="loginForm" class="auth-form" novalidate>
+            <label>
+              Correo electrónico
+              <input type="email" name="email" required autocomplete="email" placeholder="tu@correo.com" />
+            </label>
+            <label>
+              Contraseña
+              <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" minlength="6" />
+            </label>
+            <button type="submit" class="primary-button auth-submit">Iniciar sesión</button>
+          </form>
+
+          <form id="registerForm" class="auth-form hidden" novalidate>
+            <label>
+              Nombre completo
+              <input type="text" name="name" required autocomplete="name" placeholder="Ej. María García" minlength="2" />
+            </label>
+            <label>
+              Correo electrónico
+              <input type="email" name="email" required autocomplete="email" placeholder="tu@correo.com" />
+            </label>
+            <label>
+              Celular (WhatsApp)
+              <input type="tel" name="phone" required autocomplete="tel" inputmode="tel" placeholder="+57 300 123 4567" />
+              <span class="field-hint">Colombia: 10 dígitos o +57. Lo usamos para enviarte recordatorios.</span>
+            </label>
+            <label>
+              Contraseña
+              <input type="password" name="password" required autocomplete="new-password" placeholder="Mínimo 6 caracteres" minlength="6" />
+            </label>
+            <label>
+              Confirmar contraseña
+              <input type="password" name="confirmPassword" required autocomplete="new-password" placeholder="Repite tu contraseña" minlength="6" />
+            </label>
+            <button type="submit" class="primary-button auth-submit">Crear cuenta</button>
+          </form>
+
+          <div class="auth-divider" aria-hidden="true"><span>o</span></div>
+
+          <div id="googleSignInContainer" class="google-signin-container"></div>
+          <p id="googleConfigNotice" class="auth-google-notice hidden">
+            Google Sign-In no está configurado. Puedes registrarte con correo y contraseña, o añade tu Client ID en <code>auth-config.js</code> (ver README).
+          </p>
+
+          <p class="auth-switch">
+            <span id="authSwitchText">¿No tienes cuenta?</span>
+            <button type="button" id="authSwitchBtn" class="link-button auth-switch-btn">Regístrate</button>
+          </p>
+        </div>
+
+        <p class="auth-footer-note">Modo híbrido: datos locales en el dispositivo y sincronización en la nube cuando el API está configurado.</p>
+      </div>
+    </div>
+
+    <div class="app-shell hidden" id="appShell">
+      <aside class="sidebar desktop-nav" aria-label="Navegación lateral">
+        <div class="brand-block">
+          <svg class="brand-logo brand-logo--sidebar" viewBox="0 0 52 68" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+            <defs>
+              <linearGradient id="sidebarVg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4FC3F7"/>
+                <stop offset="100%" stop-color="#00E5CC"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="8" width="52" height="52" rx="13" fill="url(#sidebarVg)"/>
+            <polyline points="12,36 24,48 40,22" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="42" cy="18" r="5" fill="#FF6B35"/>
+          </svg>
+          <div class="brand-copy">
+            <span class="brand-title">Vencely</span>
+            <span class="brand-subtitle">Sin moras. Sin olvidos.</span>
           </div>
-          <nav class="nav-menu desktop-nav" aria-label="Menú principal">
-            <button class="nav-link active" data-page="dashboard">
-              <span class="nav-icon" aria-hidden="true">📊</span> Dashboard
-            </button>
-            <button class="nav-link" data-page="accounts">
-              <span class="nav-icon" aria-hidden="true">📋</span> Mis Cuentas
-            </button>
-            <button class="nav-link" data-page="calendar">
-              <span class="nav-icon" aria-hidden="true">📅</span> Calendario
-            </button>
-            <button class="nav-link" data-page="bot-settings">
-              <span class="nav-icon" aria-hidden="true">⚙️</span> Recordatorios
-            </button>
-          </nav>
-        </aside>
-        <div class="topbar-right">
-          <button type="button" class="fab-register desktop-fab" id="fabRegister" aria-label="Registrar cuenta">
-            + Nueva cuenta
+        </div>
+
+        <nav class="nav-menu" aria-label="Menú principal">
+          <button class="nav-link active" data-page="dashboard" title="Dashboard">
+            <span class="nav-icon" aria-hidden="true">📊</span>
+            <span class="nav-label">Dashboard</span>
           </button>
-          <div class="profile-card">
-            <div class="profile-avatar">AM</div>
+          <button class="nav-link" data-page="accounts" title="Mis Cuentas">
+            <span class="nav-icon" aria-hidden="true">📋</span>
+            <span class="nav-label">Mis Cuentas</span>
+          </button>
+          <button class="nav-link" data-page="calendar" title="Calendario">
+            <span class="nav-icon" aria-hidden="true">📅</span>
+            <span class="nav-label">Calendario</span>
+          </button>
+          <button class="nav-link" data-page="bot-settings" title="Recordatorios">
+            <span class="nav-icon" aria-hidden="true">⚙️</span>
+            <span class="nav-label">Recordatorios</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="profile-card" id="sidebarProfile">
+            <div class="profile-avatar" id="profileAvatar">?</div>
             <div>
-              <p class="profile-name">Alejandro M.</p>
+              <p class="profile-name" id="profileName">Usuario</p>
               <p class="profile-plan">Hogar + Empresa</p>
             </div>
           </div>
         </div>
-      </header>
+      </aside>
 
-      <main class="content">
+      <div class="app-main">
+        <header class="page-topbar">
+          <div class="mobile-brand mobile-only">
+            <span class="brand-title">Vencely</span>
+            <span class="brand-subtitle">Sin moras. Sin olvidos.</span>
+          </div>
+          <div class="sede-switcher-wrap">
+            <span class="sede-switcher-label">Casa / Sede</span>
+            <div class="sede-switcher" id="sedeSwitcher" role="group" aria-label="Filtrar por sede"></div>
+          </div>
+          <button type="button" class="fab-register desktop-fab" id="fabRegister" aria-label="Registrar cuenta">
+            + Nueva cuenta
+          </button>
+        </header>
+
+        <main class="content">
         <!-- DASHBOARD -->
         <section id="dashboard" class="page active-page">
           <header class="dashboard-header">
             <div>
-              <p class="welcome">Hola, Alejandro</p>
+              <p class="welcome" id="welcomeMessage">Hola</p>
               <p class="headline">Tienes <span id="dueCount">0</span> cuentas por vencer esta semana.</p>
             </div>
           </header>
@@ -58,8 +179,9 @@
           <section class="cards-row">
             <article class="card total-card">
               <div class="card-title">Total por pagar</div>
-              <div class="card-value" id="totalAmount">0 US$</div>
+              <div class="card-value" id="totalAmount">$ 0</div>
               <div class="card-note" id="nextPaymentNote">Próximo: --</div>
+              <div class="card-note card-sede-note" id="dashboardSedeNote">Total de todas las sedes</div>
             </article>
 
             <article class="card reminders-card">
@@ -72,12 +194,22 @@
               </div>
             </article>
 
+            <article class="card sede-card">
+              <div class="card-title">Casa / Sede</div>
+              <div class="sede-card-active" id="sedeCardActive">Todas las sedes</div>
+              <div class="sede-switcher sede-card-switcher" id="sedeCardSwitcher" role="group" aria-label="Filtrar por sede en dashboard"></div>
+            </article>
+
             <article class="card register-card">
               <div class="card-title">Registrar cuenta</div>
               <div class="register-actions">
-                <button type="button" class="action-button photo-button" data-modal="photo">
+                <button type="button" class="action-button photo-button" data-modal="photo" data-upload-mode="photo">
                   <span class="action-icon" aria-hidden="true">📷</span>
                   Foto
+                </button>
+                <button type="button" class="action-button invoice-button" data-modal="photo" data-upload-mode="invoice">
+                  <span class="action-icon" aria-hidden="true">📄</span>
+                  Factura PDF/Imagen
                 </button>
                 <button type="button" class="action-button bot-button" data-modal="bot">
                   <span class="action-icon" aria-hidden="true">💬</span>
@@ -109,27 +241,82 @@
           <header class="page-header">
             <div>
               <p class="eyebrow">Mis Cuentas</p>
-              <h1><span id="accountCount">0</span> cuentas · <span id="accountTotal">0</span> US$</h1>
+              <h1><span id="accountCount">0</span> cuentas · <span id="accountTotal">$ 0</span></h1>
             </div>
             <button type="button" class="primary-button new-account" data-modal="manual">+ Nueva cuenta</button>
           </header>
 
           <div class="account-filters">
-            <input id="accountSearch" type="search" placeholder="Buscar por nombre o proveedor..." />
-            <div class="filter-tabs">
-              <button class="tab-button active" data-filter="all">Todos</button>
-              <button class="tab-button" data-filter="vencido">Vencidos</button>
-              <button class="tab-button" data-filter="por-vencer">Por vencer</button>
-              <button class="tab-button" data-filter="pendiente">Pendientes</button>
-              <button class="tab-button" data-filter="pagado">Pagados</button>
-            </div>
-            <div class="category-chips" id="categoryFilters">
-              <button class="category-chip active" data-category="all">Todas</button>
-              <button class="category-chip" data-category="servicios">Servicios públicos</button>
-              <button class="category-chip" data-category="telefonia">Telefonía</button>
-              <button class="category-chip" data-category="tarjeta">Tarjetas</button>
-              <button class="category-chip" data-category="credito">Créditos</button>
-              <button class="category-chip" data-category="otro">Otros</button>
+            <div class="account-filters-panel">
+              <div class="account-search-wrap">
+                <span class="account-search-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <path d="M20 20l-3.5-3.5"></path>
+                  </svg>
+                </span>
+                <input id="accountSearch" type="search" placeholder="Buscar por nombre o proveedor..." autocomplete="off" />
+              </div>
+
+              <div class="filter-section">
+                <span class="filter-section-label">Estado</span>
+                <div class="filter-scroll-wrap">
+                  <div class="filter-tabs">
+                    <button type="button" class="tab-button active" data-filter="all">
+                      <span class="filter-chip-icon" aria-hidden="true">📋</span>
+                      Todos
+                    </button>
+                    <button type="button" class="tab-button" data-filter="vencido">
+                      <span class="filter-chip-icon" aria-hidden="true">⚠️</span>
+                      Vencidos
+                    </button>
+                    <button type="button" class="tab-button" data-filter="por-vencer">
+                      <span class="filter-chip-icon" aria-hidden="true">⏳</span>
+                      Por vencer
+                    </button>
+                    <button type="button" class="tab-button" data-filter="pendiente">
+                      <span class="filter-chip-icon" aria-hidden="true">🕐</span>
+                      Pendientes
+                    </button>
+                    <button type="button" class="tab-button" data-filter="pagado">
+                      <span class="filter-chip-icon" aria-hidden="true">✅</span>
+                      Pagados
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="filter-section">
+                <span class="filter-section-label">Categoría</span>
+                <div class="filter-scroll-wrap">
+                  <div class="category-chips" id="categoryFilters">
+                    <button type="button" class="category-chip active" data-category="all">
+                      <span class="filter-chip-icon" aria-hidden="true">✨</span>
+                      Todas
+                    </button>
+                    <button type="button" class="category-chip" data-category="servicios">
+                      <span class="filter-chip-icon" aria-hidden="true">💡</span>
+                      Servicios públicos
+                    </button>
+                    <button type="button" class="category-chip" data-category="telefonia">
+                      <span class="filter-chip-icon" aria-hidden="true">📱</span>
+                      Telefonía
+                    </button>
+                    <button type="button" class="category-chip" data-category="tarjeta">
+                      <span class="filter-chip-icon" aria-hidden="true">💳</span>
+                      Tarjetas
+                    </button>
+                    <button type="button" class="category-chip" data-category="credito">
+                      <span class="filter-chip-icon" aria-hidden="true">🏦</span>
+                      Créditos
+                    </button>
+                    <button type="button" class="category-chip" data-category="otro">
+                      <span class="filter-chip-icon" aria-hidden="true">📦</span>
+                      Otros
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -150,11 +337,13 @@
             </div>
           </header>
 
-          <div class="calendar-weekdays" aria-hidden="true">
-            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span>
-            <span>Jue</span><span>Vie</span><span>Sáb</span>
+          <div class="calendar-shell">
+            <div class="calendar-weekdays" aria-hidden="true">
+              <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span>
+              <span>Jue</span><span>Vie</span><span>Sáb</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
           </div>
-          <div class="calendar-grid" id="calendarGrid"></div>
         </section>
 
         <!-- AJUSTES RECORDATORIOS -->
@@ -169,22 +358,34 @@
           <div class="settings-panel">
             <div class="settings-block">
               <p class="settings-title">Canales de recordatorio</p>
-              <div class="toggle-card">
-                <div>
-                  <p class="toggle-label">WhatsApp</p>
-                  <p class="toggle-subtitle">El canal más usado. Mensaje antes del vencimiento.</p>
-                  <p class="toggle-meta">+57 300 000 0000</p>
+              <div class="toggle-card toggle-card--stack">
+                <div class="toggle-card-main">
+                  <div>
+                    <p class="toggle-label">WhatsApp</p>
+                    <p class="toggle-subtitle">El canal más usado. Mensaje antes del vencimiento.</p>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="toggleWhatsapp" checked />
+                    <span class="slider"></span>
+                  </label>
                 </div>
-                <label class="switch">
-                  <input type="checkbox" id="toggleWhatsapp" checked />
-                  <span class="slider"></span>
-                </label>
+                <div class="whatsapp-phone-edit">
+                  <label>
+                    Celular para recordatorios
+                    <input type="tel" id="whatsappPhoneInput" autocomplete="tel" inputmode="tel" placeholder="+57 300 123 4567" />
+                  </label>
+                  <p class="field-hint">Formato Colombia: 10 dígitos (ej. 3001234567) o prefijo +57.</p>
+                  <div class="whatsapp-phone-actions">
+                    <button type="button" class="ghost-button" id="btnSaveWhatsappPhone">Guardar celular</button>
+                    <p class="toggle-meta" id="settingsUserPhone" aria-live="polite">—</p>
+                  </div>
+                </div>
               </div>
               <div class="toggle-card">
                 <div>
                   <p class="toggle-label">Correo electrónico</p>
                   <p class="toggle-subtitle">Resumen y avisos en tu bandeja de entrada.</p>
-                  <p class="toggle-meta">alejandro@correo.com</p>
+                  <p class="toggle-meta" id="settingsUserEmail">—</p>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="toggleEmail" checked />
@@ -200,6 +401,49 @@
                   <input type="checkbox" id="toggleChat" checked />
                   <span class="slider"></span>
                 </label>
+              </div>
+            </div>
+
+            <div class="settings-block">
+              <p class="settings-title">País y moneda</p>
+              <p class="settings-subtitle">La moneda se aplica a montos, totales y formularios de registro.</p>
+              <label>
+                País
+                <select id="countrySelect"></select>
+              </label>
+            </div>
+
+            <div class="settings-block">
+              <div class="settings-block-header">
+                <p class="settings-title">Casas y sedes</p>
+                <button type="button" class="ghost-button" id="btnAddSede">+ Nueva sede</button>
+              </div>
+              <p class="settings-subtitle">Organiza tus pagos por ubicación: casa, oficina, apartamento, etc.</p>
+              <div class="sedes-list" id="sedesList"></div>
+            </div>
+
+            <div class="settings-block">
+              <p class="settings-title">Sincronización en la nube</p>
+              <p class="settings-subtitle">Tus cuentas y sedes se guardan localmente y se sincronizan con el servidor cuando hay conexión.</p>
+              <div class="sync-status-card">
+                <div class="sync-status-row">
+                  <span class="sync-status-dot" id="syncStatusIndicator" aria-hidden="true"></span>
+                  <div>
+                    <p class="sync-status-text" id="syncStatusText">Comprobando estado…</p>
+                    <p class="sync-status-meta" id="syncLastSynced">—</p>
+                  </div>
+                </div>
+                <button type="button" class="primary-button" id="btnSyncNow">Sincronizar ahora</button>
+              </div>
+            </div>
+
+            <div class="settings-block">
+              <div class="account-session-card">
+                <div class="account-session-info">
+                  <p class="account-session-name" id="settingsAccountName">Usuario</p>
+                  <p class="account-session-hint">Sesión activa en este dispositivo</p>
+                </div>
+                <button type="button" class="ghost-button auth-logout-btn" id="btnLogout">Cerrar sesión</button>
               </div>
             </div>
 
@@ -235,7 +479,8 @@
             </div>
           </div>
         </section>
-      </main>
+        </main>
+      </div>
 
       <!-- Navegación móvil (Android / web móvil) -->
       <nav class="bottom-nav mobile-nav" aria-label="Navegación móvil">
@@ -271,11 +516,18 @@
             <p>Completa el formulario paso a paso</p>
           </div>
         </button>
-        <button type="button" class="sheet-option" data-modal="photo">
+        <button type="button" class="sheet-option" data-modal="photo" data-upload-mode="photo">
           <span aria-hidden="true">📷</span>
           <div>
             <strong>Foto de factura</strong>
             <p>Escanea o sube una imagen</p>
+          </div>
+        </button>
+        <button type="button" class="sheet-option" data-modal="photo" data-upload-mode="invoice">
+          <span aria-hidden="true">📄</span>
+          <div>
+            <strong>Factura PDF o imagen</strong>
+            <p>Sube un archivo PDF o imagen de tu factura</p>
           </div>
         </button>
         <button type="button" class="sheet-option" data-modal="bot">
@@ -331,8 +583,12 @@
                 </select>
               </label>
               <label>
-                Monto (US$)
-                <input type="number" name="amount" required min="0" step="0.01" placeholder="0.00" />
+                Casa / Sede
+                <select name="sedeId" required></select>
+              </label>
+              <label>
+                <span id="manualAmountLabel">Monto (COP)</span>
+                <input type="number" name="amount" required min="0" step="1" placeholder="0" />
               </label>
               <label>
                 Icono
@@ -428,12 +684,12 @@
       </div>
     </div>
 
-    <!-- Modal: Foto -->
+    <!-- Modal: Foto / Factura -->
     <div class="modal-overlay hidden" id="modalPhoto" role="dialog" aria-modal="true" aria-labelledby="photoModalTitle">
       <div class="modal modal-photo">
         <header class="modal-header">
           <div>
-            <p class="eyebrow">Registro por foto</p>
+            <p class="eyebrow" id="photoModalEyebrow">Registro por foto</p>
             <h2 id="photoModalTitle">Escanea tu factura</h2>
           </div>
           <button type="button" class="modal-close" data-close-modal aria-label="Cerrar">×</button>
@@ -441,29 +697,71 @@
 
         <div class="modal-body">
           <div class="photo-dropzone" id="photoDropzone">
-            <input type="file" id="photoInput" accept="image/*" capture="environment" hidden />
+            <input type="file" id="photoInputCamera" accept="image/*" capture="environment" hidden />
+            <input type="file" id="photoInputGallery" accept="image/*" hidden />
+            <input type="file" id="invoiceInput" accept="image/*,application/pdf" hidden />
             <div class="photo-placeholder" id="photoPlaceholder">
-              <span class="photo-icon" aria-hidden="true">📷</span>
-              <p>Arrastra una imagen o toca para capturar</p>
-              <p class="form-hint">Soporta facturas de servicios, tarjetas y créditos</p>
+              <span class="photo-icon" id="photoPlaceholderIcon" aria-hidden="true">📷</span>
+              <p id="photoPlaceholderText">Arrastra una imagen o usa los botones de abajo</p>
+              <p class="form-hint" id="photoPlaceholderHint">Soporta facturas de servicios, tarjetas y créditos</p>
             </div>
             <img id="photoPreview" class="photo-preview hidden" alt="Vista previa de factura" />
+            <div id="pdfPreview" class="pdf-preview hidden">
+              <span class="pdf-icon" aria-hidden="true">📄</span>
+              <p class="pdf-filename" id="pdfFileName">factura.pdf</p>
+              <p class="form-hint">Vista previa no disponible para PDF</p>
+            </div>
+          </div>
+
+          <div id="photoCaptureActions" class="photo-capture-actions hidden">
+            <p class="camera-permission-note" id="cameraPermissionNote">
+              Vencely necesita acceso a tu cámara para fotografiar la factura. Solo se usa cuando eliges tomar una foto.
+            </p>
+            <p id="photoCameraError" class="camera-error hidden" role="alert"></p>
+            <div class="photo-action-buttons">
+              <button type="button" class="primary-button photo-action-btn" id="btnTakePhoto">
+                Tomar foto con cámara
+              </button>
+              <button type="button" class="ghost-button photo-action-btn" id="btnPickGallery">
+                Elegir de galería
+              </button>
+            </div>
+          </div>
+
+          <div id="photoExtracting" class="photo-extracting hidden" role="status" aria-live="polite">
+            <span class="photo-extracting-spinner" aria-hidden="true"></span>
+            <p>Extrayendo datos de la factura…</p>
           </div>
 
           <div id="photoExtracted" class="photo-extracted hidden">
             <p class="form-section-title">Datos detectados (revisa y ajusta)</p>
+            <p id="photoExtractNote" class="form-hint photo-extract-note hidden"></p>
             <div class="form-grid">
               <label class="full-width">
                 Proveedor detectado
                 <input type="text" id="photoProvider" />
               </label>
               <label>
-                Monto detectado
-                <input type="number" id="photoAmount" step="0.01" />
+                Monto detectado (<span data-currency-label>COP</span>)
+                <input type="number" id="photoAmount" step="1" />
               </label>
               <label>
                 Vencimiento detectado
                 <input type="date" id="photoDueDate" />
+              </label>
+              <label>
+                Categoría sugerida
+                <select id="photoCategory">
+                  <option value="servicios">Servicios públicos</option>
+                  <option value="telefonia">Telefonía / Internet</option>
+                  <option value="tarjeta">Tarjeta de crédito</option>
+                  <option value="credito">Crédito bancario</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </label>
+              <label>
+                Casa / Sede
+                <select id="photoSede"></select>
               </label>
             </div>
           </div>
@@ -490,27 +788,97 @@
         <div class="chat-container">
           <div class="chat-messages" id="chatMessages" role="log" aria-live="polite"></div>
           <div class="chat-suggestions" id="chatSuggestions">
-            <button type="button" class="suggestion-chip" data-suggestion="Registrar luz Enel $85 vence el 15 de junio">
-              Luz Enel $85
+            <button type="button" class="suggestion-chip" data-suggestion="Registrar luz Enel $85.000 vence el 15 de junio">
+              Luz Enel $85.000
             </button>
-            <button type="button" class="suggestion-chip" data-suggestion="Agregar tarjeta Visa del banco, pago mínimo $200 el día 20">
+            <button type="button" class="suggestion-chip" data-suggestion="Agregar tarjeta Visa del banco, pago mínimo $200.000 el día 20">
               Tarjeta Visa
             </button>
-            <button type="button" class="suggestion-chip" data-suggestion="Crédito vehículo banco, cuota mensual $420">
+            <button type="button" class="suggestion-chip" data-suggestion="Crédito vehículo banco, cuota mensual $420.000">
               Crédito auto
             </button>
           </div>
           <form class="chat-input-bar" id="chatForm">
-            <input type="text" id="chatInput" placeholder="Ej: Agregar internet Claro $45, vence el 17..." autocomplete="off" />
+            <input type="text" id="chatInput" placeholder="Ej: Agregar internet Claro $45.500, vence el 17..." autocomplete="off" />
             <button type="submit" class="primary-button chat-send" aria-label="Enviar">Enviar</button>
           </form>
         </div>
       </div>
     </div>
 
+    <!-- Modal: Gestionar sede -->
+    <div class="modal-overlay hidden" id="modalSede" role="dialog" aria-modal="true" aria-labelledby="sedeModalTitle">
+      <div class="modal modal-sede">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Casa / Sede</p>
+            <h2 id="sedeModalTitle">Nueva sede</h2>
+          </div>
+          <button type="button" class="modal-close" data-close-modal aria-label="Cerrar">×</button>
+        </header>
+
+        <form id="sedeForm" class="modal-body">
+          <input type="hidden" name="sedeId" value="" />
+          <div class="form-grid">
+            <label class="full-width">
+              Nombre de la sede
+              <input type="text" name="name" required placeholder="Ej. Casa principal, Apartamento playa..." />
+            </label>
+            <label>
+              Icono
+              <select name="icon">
+                <option value="🏠">🏠 Casa</option>
+                <option value="🏢">🏢 Oficina</option>
+                <option value="🏖️">🏖️ Playa / vacaciones</option>
+                <option value="🏘️">🏘️ Apartamento</option>
+                <option value="🏭">🏭 Sede / local</option>
+                <option value="📍">📍 Otro</option>
+              </select>
+            </label>
+          </div>
+        </form>
+
+        <footer class="modal-footer">
+          <button type="button" class="ghost-button" data-close-modal>Cancelar</button>
+          <button type="submit" form="sedeForm" class="primary-button">Guardar sede</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal: vista previa de cámara -->
+    <div class="modal-overlay camera-overlay hidden" id="cameraModal" role="dialog" aria-modal="true" aria-labelledby="cameraModalTitle">
+      <div class="camera-panel">
+        <header class="camera-header">
+          <div>
+            <p class="eyebrow">Cámara</p>
+            <h3 id="cameraModalTitle">Tomar foto de factura</h3>
+          </div>
+          <button type="button" class="modal-close" id="cameraModalClose" aria-label="Cerrar">×</button>
+        </header>
+        <p class="camera-permission-note camera-permission-note--inline" id="cameraModalPermissionNote">
+          Acepta el permiso de cámara cuando tu navegador lo solicite para capturar la factura.
+        </p>
+        <div class="camera-viewport">
+          <video id="cameraVideo" autoplay playsinline muted aria-label="Vista previa de cámara"></video>
+          <canvas id="cameraCanvas" hidden></canvas>
+          <p id="cameraModalError" class="camera-error hidden" role="alert"></p>
+        </div>
+        <footer class="camera-footer">
+          <button type="button" class="ghost-button" id="cameraCancel">Cancelar</button>
+          <button type="button" class="primary-button" id="cameraCapture">Capturar foto</button>
+        </footer>
+      </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
 
+    <script>window.AUTH_CONFIG = { GOOGLE_CLIENT_ID: '' };</script>
+    <script>window.SYNC_CONFIG = { API_BASE_URL: 'http://localhost:3000' };</script>
+    <script src="auth-config.js"></script>
+    <script src="sync-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="sync.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

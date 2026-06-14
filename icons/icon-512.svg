@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Vencely">
+  <defs>
+    <linearGradient id="bg512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A2342"/>
+      <stop offset="100%" stop-color="#1A3F6F"/>
+    </linearGradient>
+    <linearGradient id="check512" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4FC3F7"/>
+      <stop offset="100%" stop-color="#00E5CC"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg512)"/>
+  <polyline points="128,304 224,400 384,176" fill="none" stroke="url(#check512)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="392" cy="152" r="48" fill="#FF6B35"/>
+</svg>
